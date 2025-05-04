@@ -40,8 +40,8 @@ The process works as follows:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/meta-agent-system.git
-cd meta-agent-system
+git clone https://github.com/xwrx-io/meta-agent.git
+cd meta-agent
 ```
 
 2. Create a virtual environment:
