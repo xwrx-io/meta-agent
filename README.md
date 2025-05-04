@@ -1,15 +1,15 @@
 # Meta Agent System
 
-A framework for solving complex problems using a meta-agent approach with dynamically created specialized expert agents.
+A framework for solving complex problems using a meta-agent approach with dynamically created specialised expert agents.
 
 ## Overview
 
-This system uses a meta-agent that coordinates multiple expert agents to solve complex problems. The meta-agent decomposes problems into subtasks, identifies the expertise needed for each subtask, and either assigns tasks to appropriate existing expert agents or dynamically creates new specialized agents as required.
+This system uses a meta-agent that coordinates multiple expert agents to solve complex problems. The meta-agent decomposes problems into subtasks, identifies the expertise needed for each subtask, and either assigns tasks to appropriate existing expert agents or dynamically creates new specialised agents as required.
 
 ## Key Features
 
 - **Task Decomposition**: Breaks complex problems into manageable subtasks
-- **Dynamic Expert Creation**: Creates specialized expert agents on demand based on required expertise
+- **Dynamic Expert Creation**: Creates specialised expert agents on demand based on required expertise
 - **Feedback Loop**: Implements an iterative improvement cycle with validation and refinement
 - **Success Criteria**: Automatically determines when a solution is satisfactory
 - **Expertise Recommendation**: Identifies when new types of expertise might improve results
@@ -44,14 +44,23 @@ git clone https://github.com/yourusername/meta-agent-system.git
 cd meta-agent-system
 ```
 
-2. Create a virtual environment and install dependencies:
+2. Create a virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install the package using setup.py (recommended):
+```bash
+pip install -e .
+```
+
+   Alternatively, you can install from requirements.txt:
+```bash
 pip install -r requirements.txt
 ```
 
-3. Set up your OpenAI API key:
+4. Set up your OpenAI API key:
 ```bash
 echo "OPENAI_API_KEY=your-api-key-here" > .env
 ```
@@ -63,6 +72,16 @@ To run the meta agent on the credit card rules discovery problem:
 ```bash
 python meta_agent_system/main.py
 ```
+
+The system will generate a comprehensive summary at the end of the run, including:
+- List of expert agents used (both initial and dynamically created)
+- Complete system prompts for new expert agents
+- Credit card application test results and validation statistics
+- Evolution of rules from initial to final versions
+- Visualization of accuracy improvements across iterations
+- Runtime metrics and resource usage
+
+Results and visualizations are saved to the `data/results/` directory.
 
 ### Testing
 
@@ -86,7 +105,7 @@ python meta_agent_system/tests/test_end_to_end.py
 
 ### Meta Agent Architecture
 
-The meta agent uses a priority queue to manage tasks and delegates them to specialized expert agents. When expertise is needed that no current agent possesses, the meta agent can dynamically create new expert agents with appropriate system prompts.
+The meta agent uses a priority queue to manage tasks and delegates them to specialised expert agents. When expertise is needed that no current agent possesses, the meta agent can dynamically create new expert agents with appropriate system prompts.
 
 ```mermaid
 graph TD
@@ -100,7 +119,7 @@ graph TD
     ExistingExpert -->|No| CreateExpert[Create New Expert]
     
     CreateExpert --> ExpertFactory[Expert Factory]
-    ExpertFactory --> NewExpert[New Specialized Expert]
+    ExpertFactory --> NewExpert[New Specialised Expert]
     NewExpert --> RegisterExpert[Register Expert]
     RegisterExpert --> AssignExpert
     
