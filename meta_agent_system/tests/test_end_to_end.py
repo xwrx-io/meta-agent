@@ -48,6 +48,13 @@ class TestEndToEnd(unittest.TestCase):
         
     def test_credit_card_rules_discovery(self):
         """Test the credit card rules discovery problem end-to-end"""
+        # Import the generate_enhanced_summary function
+        from meta_agent_system.main import generate_enhanced_summary
+        import tracemalloc
+        
+        # Start tracemalloc to debug resource warnings
+        tracemalloc.start()
+        
         # Start timing
         start_time = time.time()
         
@@ -89,6 +96,10 @@ class TestEndToEnd(unittest.TestCase):
         print(f"Iterations: {results['iterations']}")
         print(f"Tasks completed: {results['tasks_completed']}")
         
+        # Generate enhanced summary (this creates the visualization)
+        print("\nGenerating enhanced summary...")
+        generate_enhanced_summary(results)
+        
         # Verify results
         self.assertEqual(results["status"], "completed", "Problem should be solved completely")
         
@@ -112,13 +123,14 @@ class TestEndToEnd(unittest.TestCase):
                 with open(validation_file, 'r') as f:
                     validation_data = json.load(f)
                     if "accuracy" in validation_data:
-                        accuracy = validation_data["accuracy"]
+                        accuracy = float(validation_data["accuracy"])  # Ensure it's a float
                         print(f"Achieved accuracy: {accuracy:.2f}%")
                         self.assertGreaterEqual(accuracy, 85.0, "Should achieve at least 85% accuracy")
             except Exception as e:
                 print(f"Warning: Could not read validation file: {str(e)}")
         
-        # Check if visualization was created
+        # Check if visualization was created - with a delay to ensure file is written
+        time.sleep(1)  # Give a second for file operations to complete
         visualization_files = glob.glob(os.path.join(RESULTS_DIR, "accuracy_improvement_*.png"))
         self.assertTrue(len(visualization_files) > 0, "Should have created accuracy visualization")
         
@@ -144,6 +156,13 @@ class TestEndToEnd(unittest.TestCase):
         # Alternatively, check the logs for created experts
         if not created_experts:
             print("Note: No experts found directly in results, but logs show they were created")
+        
+        # Print memory statistics to help debug resource warnings
+        snapshot = tracemalloc.take_snapshot()
+        top_stats = snapshot.statistics('lineno')
+        print("\nTop 10 memory allocations:")
+        for stat in top_stats[:10]:
+            print(stat)
     
     def _register_experts(self, meta):
         """Register all experts with the meta agent"""

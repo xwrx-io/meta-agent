@@ -1,6 +1,6 @@
 # Meta Agent System
 
-A framework for solving complex problems using a meta-agent approach with dynamically created specialised expert agents.
+A solution for solving complex problems using a meta-agent approach with dynamically created specialised expert agents.
 
 ## Overview
 

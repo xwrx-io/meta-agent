@@ -21,6 +21,10 @@ def setup_logger(name, log_level=logging.INFO, log_file=None):
     
     # Clear existing handlers if any
     if logger.handlers:
+        # Properly close handlers before clearing
+        for handler in logger.handlers:
+            handler.flush()
+            handler.close()
         logger.handlers.clear()
     
     # Create color formatter for console
