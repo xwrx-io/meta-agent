@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Aisha",
+    "lastName": "Khan",
+    "dateOfBirth": "1982-03-15",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 105000,
+    "employmentStatus": "Part-time",
+    "existingDebt": 1500
+  },
+  "creditHistory": {
+    "creditScore": 730,
+    "paymentHistory": "Excellent"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Platinum",
+    "creditLimit": 18000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

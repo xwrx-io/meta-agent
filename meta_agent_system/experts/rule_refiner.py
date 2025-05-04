@@ -47,37 +47,66 @@ Format your improved ruleset as a structured JSON object that can be used for fu
         validation_results = None
         applications = []
         
+        # If this is passed from feedback loop, get validation results from task data
+        if task_data and "validation_result" in task_data:
+            validation_results = task_data.get("validation_result", {}).get("validation_results", {})
+            logger.info("Found validation results in task data")
+        
         # Find the most recent rule extraction result
-        for key, value in reversed(list(context.items())):
+        for key, value in reversed(list(context.items())) if context else []:
             if isinstance(value, dict) and value.get("agent_name") == "Rule Extractor":
                 if "result" in value and "ruleset" in value["result"]:
                     ruleset = value["result"]["ruleset"]
                     break
         
-        # Find the most recent validation result
-        for key, value in reversed(list(context.items())):
-            if isinstance(value, dict) and value.get("agent_name") == "Validator":
-                if "result" in value and "validation_results" in value["result"]:
-                    validation_results = value["result"]["validation_results"]
-                    break
+        # If not found yet, check for most recent validator result
+        if not validation_results:
+            for key, value in reversed(list(context.items())) if context else []:
+                if isinstance(value, dict) and value.get("agent_name") == "Validator":
+                    if "result" in value and "validation_results" in value["result"]:
+                        validation_results = value["result"]["validation_results"]
+                        break
         
         # Get applications
-        for key, value in context.items():
+        for key, value in context.items() if context else []:
             if isinstance(value, dict) and value.get("agent_name") == "Data Generator":
                 if "applications" in value.get("result", {}):
                     applications = value["result"]["applications"]
                     break
         
+        # Try loading ruleset from file if not found in context
+        if not ruleset:
+            ruleset_file = os.path.join(RESULTS_DIR, "credit_card_approval_rules.json")
+            if os.path.exists(ruleset_file):
+                try:
+                    with open(ruleset_file, 'r') as f:
+                        ruleset = json.load(f)
+                    logger.info(f"Loaded ruleset from file: {ruleset_file}")
+                except Exception as e:
+                    logger.error(f"Error loading ruleset from file: {str(e)}")
+        
         if not ruleset:
             return {
                 "status": "error",
-                "error": "No ruleset found in context. Rule Extractor must run first."
+                "error": "No ruleset found in context or files. Rule Extractor must run first."
             }
+        
+        # Try loading validation results from file if not found in context
+        if not validation_results:
+            validation_file = os.path.join(RESULTS_DIR, "validation_results.json")
+            if os.path.exists(validation_file):
+                try:
+                    with open(validation_file, 'r') as f:
+                        validation_data = json.load(f)
+                        validation_results = validation_data.get("results", {})
+                    logger.info(f"Loaded validation results from file: {validation_file}")
+                except Exception as e:
+                    logger.error(f"Error loading validation results from file: {str(e)}")
         
         if not validation_results:
             return {
                 "status": "error",
-                "error": "No validation results found in context. Validator must run first."
+                "error": "No validation results found in context or files. Validator must run first."
             }
         
         if not applications:
@@ -100,6 +129,14 @@ Format your improved ruleset as a structured JSON object that can be used for fu
                 "error": "No applications found in context or files. Data Generator must run first."
             }
         
+        # Extract useful information from validation results
+        inconsistencies = []
+        suggestions = []
+        
+        if isinstance(validation_results, dict):
+            inconsistencies = validation_results.get("inconsistencies", [])
+            suggestions = validation_results.get("suggestions", [])
+        
         # Construct a prompt for rule refinement
         prompt = f"""
 Task Description: {task_description}
@@ -111,6 +148,12 @@ Current Ruleset:
 
 Validation Results:
 {json.dumps(validation_results, indent=2)}
+
+Inconsistencies found:
+{json.dumps(inconsistencies, indent=2)}
+
+Suggested improvements:
+{json.dumps(suggestions, indent=2)}
 
 Example Applications (first 3):
 {json.dumps(applications[:3], indent=2)}
@@ -154,7 +197,7 @@ Return the complete refined ruleset as a JSON object that can be used for furthe
             
             # Save the refined ruleset to file
             os.makedirs(RESULTS_DIR, exist_ok=True)
-            ruleset_file = os.path.join(RESULTS_DIR, "refined_credit_card_approval_rules.json")
+            ruleset_file = os.path.join(RESULTS_DIR, "credit_card_approval_rules.json")
             with open(ruleset_file, 'w') as f:
                 json.dump(refined_ruleset, f, indent=2)
             
@@ -185,7 +228,7 @@ Return the complete refined ruleset as a JSON object that can be used for furthe
     # Create and return the expert agent
     return ExpertAgent(
         name="Rule Refiner",
-        capabilities=["rule_refinement", "rule_optimization"],
+        capabilities=["rule_refinement", "rule_optimization", "general"],
         behavior=rule_refinement_behavior,
         description="Improves rules based on validation feedback"
     )

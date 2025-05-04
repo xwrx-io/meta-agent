@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Maria",
+    "lastName": "Gonzalez",
+    "dateOfBirth": "1978-08-22",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 120000,
+    "employmentStatus": "Self-employed",
+    "existingDebt": 2000
+  },
+  "creditHistory": {
+    "creditScore": 750,
+    "paymentHistory": "Very Good"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Gold",
+    "creditLimit": 20000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

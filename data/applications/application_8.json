@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Liam",
+    "lastName": "Smith",
+    "dateOfBirth": "1990-11-05",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 80000,
+    "employmentStatus": "Full-time",
+    "existingDebt": 3000
+  },
+  "creditHistory": {
+    "creditScore": 710,
+    "paymentHistory": "Good"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Silver",
+    "creditLimit": 10000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

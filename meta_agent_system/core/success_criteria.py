@@ -1,5 +1,9 @@
 from typing import Dict, Any, Optional
 from meta_agent_system.utils.logger import get_logger
+import os
+import json
+from meta_agent_system.config.settings import RESULTS_DIR
+from datetime import datetime
 
 logger = get_logger(__name__)
 
@@ -18,87 +22,94 @@ class SuccessCriteriaChecker:
             criteria_type: Type of criteria to check (default: credit_card_rules)
         """
         self.criteria_type = criteria_type
+        self.logger = get_logger(__name__)
         logger.info(f"Initialized success criteria checker for: {criteria_type}")
     
-    def check_success(self, meta_agent_context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Check if the current state meets the success criteria.
+    def check_success(self, completed_tasks):
+        """Check if the success criteria are met."""
+        # Make sure we examine each task to see which field contains the agent name
+        meta_agent_context = {}
         
-        Args:
-            meta_agent_context: Current context from the meta agent
-            
-        Returns:
-            Dictionary with success status and details
-        """
+        for task in completed_tasks:
+            if hasattr(task, 'result') and task.result:
+                # Try different ways to get the agent name
+                agent_name = None
+                if hasattr(task, 'agent'):
+                    agent_name = task.agent
+                elif hasattr(task, 'agent_name'):
+                    agent_name = task.agent_name
+                # Add more fallbacks if needed
+                
+                meta_agent_context[task.id] = {
+                    "agent_name": agent_name,
+                    "result": task.result
+                }
+        
         if self.criteria_type == "credit_card_rules":
             return self._check_credit_card_rules_success(meta_agent_context)
-        else:
-            logger.warning(f"Unknown criteria type: {self.criteria_type}")
-            return {"success": False, "reason": f"Unknown criteria type: {self.criteria_type}"}
+        # Add more criteria types as needed
+        return False
     
-    def _check_credit_card_rules_success(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_credit_card_rules_success(self, context):
         """
-        Check success criteria for credit card rules discovery.
+        Check if credit card rules success criteria are met.
         
-        The criteria are:
-        1. Rules have been extracted
-        2. Rules have been validated
-        3. Validation accuracy is 100%
-        
-        Args:
-            context: Current context from the meta agent
-            
-        Returns:
-            Dictionary with success status and details
+        Success is defined as:
+        1. Validator has validated the rules with 100% accuracy
+        2. All applications are correctly classified (approved/declined)
         """
-        # Check if rules have been extracted
-        ruleset = None
-        validation_results = None
+        self.logger.info("Checking credit card rules success criteria")
         
-        # Find the most recent rule extraction result
-        for key, value in reversed(list(context.items())):
-            if isinstance(value, dict) and value.get("agent_name") == "Rule Extractor":
-                if "result" in value and "ruleset" in value["result"]:
-                    ruleset = value["result"]["ruleset"]
-                    break
+        for key, value in context.items():
+            if value.get("agent_name") == "Validator":
+                result = value.get("result", {})
+                
+                # Check if validation was successful and if accuracy is 100%
+                accuracy = result.get("accuracy", 0)
+                success_flag = result.get("success", False)
+                
+                self.logger.info(f"Validator accuracy: {accuracy}%, Success flag: {success_flag}")
+                
+                if success_flag is True and accuracy >= 100:
+                    self.logger.info("Credit card rules success criteria met! 100% accuracy achieved.")
+                    
+                    # Save the final results
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    results_file = os.path.join(RESULTS_DIR, f"results_{timestamp}.json")
+                    
+                    try:
+                        os.makedirs(os.path.dirname(results_file), exist_ok=True)
+                        with open(results_file, 'w') as f:
+                            json.dump(context, f, indent=2)
+                        self.logger.info(f"Saved final results to {results_file}")
+                    except Exception as e:
+                        self.logger.error(f"Error saving results: {str(e)}")
+                    
+                    return True
         
-        # Find the most recent validation result
-        for key, value in reversed(list(context.items())):
-            if isinstance(value, dict) and value.get("agent_name") == "Validator":
-                if "result" in value and "validation_results" in value["result"]:
-                    validation_results = value["result"]["validation_results"]
-                    break
+        self.logger.info("Credit card rules success criteria not yet met")
+        return False
+
+    def check(self, task_results):
+        """Check if success criteria are met."""
+        # For credit card rules, we need to check validation results
+        validation_result = None
+        for task in task_results:
+            if task.get('agent_name') == 'Validator':
+                validation_result = task.get('result', {})
+                break
         
-        # Check success criteria
-        if not ruleset:
-            return {"success": False, "reason": "No rules have been extracted yet"}
+        if not validation_result:
+            self.logger.warning("No validation result found, cannot determine success")
+            return False
         
-        if not validation_results:
-            return {"success": False, "reason": "Rules have not been validated yet"}
+        # Check both accuracy and success status
+        validation_status = validation_result.get('status', '')
+        validation_success = validation_result.get('success', False)
         
-        # Check accuracy
-        accuracy = validation_results.get("calculated_accuracy")
-        if accuracy is None:
-            # Try to get from validation_results directly
-            accuracy_str = validation_results.get("accuracy", "0%")
-            try:
-                accuracy = float(accuracy_str.strip('%')) / 100
-            except:
-                accuracy = 0
-        
-        # Success criteria: 100% accuracy
-        if accuracy >= 1.0:
-            return {
-                "success": True, 
-                "reason": "Rules have been validated with 100% accuracy",
-                "ruleset": ruleset,
-                "validation_results": validation_results
-            }
+        if validation_status == 'success' and validation_success is True:
+            self.logger.info("Success criteria met: Validation was fully successful")
+            return True
         else:
-            return {
-                "success": False, 
-                "reason": f"Rules accuracy is {accuracy*100:.2f}%, below the required 100%",
-                "ruleset": ruleset,
-                "validation_results": validation_results,
-                "accuracy": accuracy
-            }
+            self.logger.info(f"Success criteria not met: Validation status={validation_status}, success={validation_success}")
+            return False

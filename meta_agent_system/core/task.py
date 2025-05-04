@@ -82,3 +82,8 @@ class Task(BaseModel):
         if not isinstance(other, Task):
             return NotImplemented
         return self.priority < other.priority
+
+    def dict(self):
+        if hasattr(self, 'model_dump'):
+            return self.model_dump()
+        # Fall back to original implementation

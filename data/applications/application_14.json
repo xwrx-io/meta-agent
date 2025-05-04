@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Sarah",
+    "lastName": "Williams",
+    "dateOfBirth": "1992-07-15",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 35000,
+    "employmentStatus": "Self-employed",
+    "existingDebt": 25000
+  },
+  "creditHistory": {
+    "creditScore": 610,
+    "paymentHistory": "Several defaults"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Standard",
+    "creditLimit": 2000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

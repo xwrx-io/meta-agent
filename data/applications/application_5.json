@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Emma",
+    "lastName": "Davis",
+    "dateOfBirth": "1995-12-02",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 95000,
+    "employmentStatus": "Employed",
+    "existingDebt": 1500
+  },
+  "creditHistory": {
+    "creditScore": 765,
+    "paymentHistory": "Very Good"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Gold",
+    "creditLimit": 22000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

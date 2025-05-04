@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Chris",
+    "lastName": "Davis",
+    "dateOfBirth": "1983-07-19",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 25000,
+    "employmentStatus": "Freelancer",
+    "existingDebt": 22000
+  },
+  "creditHistory": {
+    "creditScore": 590,
+    "paymentHistory": "Bankruptcy"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Business",
+    "creditLimit": 8000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

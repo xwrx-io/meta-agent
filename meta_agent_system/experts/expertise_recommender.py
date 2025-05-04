@@ -3,6 +3,11 @@ import json
 from meta_agent_system.core.expert_agent import ExpertAgent
 from meta_agent_system.llm.openai_client import OpenAIClient
 from meta_agent_system.utils.logger import get_logger
+import os
+from meta_agent_system.config.settings import RESULTS_DIR
+import time
+import re
+from datetime import datetime
 
 logger = get_logger(__name__)
 
@@ -33,135 +38,89 @@ Your recommendations should be specific, actionable, and justified by the curren
 """
     
     def expertise_recommendation_behavior(task: Dict[str, Any]) -> Dict[str, Any]:
-        """Behavior function for expertise recommendation"""
-        task_description = task.get("description", "")
-        task_data = task.get("data", {})
-        context = task.get("context", {})
+        """Generate expertise recommendations based on validation results."""
+        logger.info("Expertise Recommender processing task")
         
-        # Analyze validation results and current performance
-        validation_results = None
-        ruleset = None
-        
-        # Find the most recent validation result
-        for key, value in reversed(list(context.items())):
-            if isinstance(value, dict) and value.get("agent_name") == "Validator":
-                if "result" in value and "validation_results" in value["result"]:
-                    validation_results = value["result"]["validation_results"]
+        # Get validation result from task data or context
+        validation_result = task.get("data", {}).get("validation_result")
+        if not validation_result:
+            # Try to find in context
+            for context_item in task.get("context", {}).values():
+                if isinstance(context_item, dict) and context_item.get("agent_name") == "Validator":
+                    validation_result = context_item.get("result")
                     break
         
-        # Find the most recent ruleset
-        for key, value in reversed(list(context.items())):
-            if isinstance(value, dict) and (value.get("agent_name") == "Rule Extractor" or 
-                                          value.get("agent_name") == "Rule Refiner"):
-                if "result" in value and "ruleset" in value["result"]:
-                    ruleset = value["result"]["ruleset"]
-                    break
+        if not validation_result:
+            logger.error("No validation result found")
+            return {
+                "status": "error",
+                "message": "No validation data available"
+            }
         
-        # Get list of current agents/expertise
-        current_expertise = []
-        for key, value in context.items():
-            if isinstance(value, dict) and "agent_name" in value:
-                current_expertise.append(value["agent_name"])
+        # Extract useful information for prompting
+        inconsistencies = validation_result.get("validation_results", {}).get("inconsistencies", [])
+        suggestions = validation_result.get("validation_results", {}).get("suggestions", [])
         
-        # Construct a prompt for expertise recommendation
+        logger.info(f"Found {len(inconsistencies)} inconsistencies and {len(suggestions)} suggestions")
+        
+        # Construct prompt for the LLM
         prompt = f"""
-Task Description: {task_description}
+Based on the validation results of our credit card approval rules system, we need specialized experts to improve the ruleset.
 
-Context: {task_data.get('context', '')}
+Current accuracy: {validation_result.get('accuracy', 0)}%
 
-Current Experts Available:
-{json.dumps(list(set(current_expertise)), indent=2)}
+Inconsistencies detected:
+{json.dumps(inconsistencies, indent=2)}
 
-Validation Results:
-{json.dumps(validation_results, indent=2) if validation_results else "No validation results yet"}
+Improvement suggestions:
+{json.dumps(suggestions, indent=2)}
 
-Current Ruleset:
-{json.dumps(ruleset, indent=2) if ruleset else "No ruleset yet"}
+Please recommend specialized experts that would help achieve 100% accuracy. For each expert, provide:
+1. Name (descriptive of their expertise)
+2. List of capabilities (skills they have)
+3. System prompt (detailed instructions for the expert)
 
-Based on the current state of the problem and the performance so far, please identify what 
-additional specialized expertise might be needed to improve the results.
-
-Consider:
-1. Are there patterns or aspects of the data that current experts might be missing?
-2. Would specific domain knowledge help in formulating better rules?
-3. Are there technical aspects that need specialized attention?
-4. What expertise would help address the gaps in the current solution?
-
-For each recommended expertise, explain:
-- What specific expertise is needed
-- Why it would be valuable
-- How it would improve the current solution
-- What tasks this expertise would perform
+Format your response as a valid JSON object with a 'recommended_experts' array containing expert objects.
 """
         
         # Get response from LLM
+        logger.info("Generating expertise recommendations with LLM")
         llm_response = llm_client.generate(
             prompt=prompt,
             system_message=system_prompt,
-            temperature=0.7,
-            max_tokens=2000
+            temperature=0.7
         )
         
-        # Extract recommendations
+        # Extract JSON response
         try:
-            # Try to find JSON in the response
-            import re
-            json_match = re.search(r'\{[\s\S]*\}', llm_response)
-            
-            if json_match:
-                recommendations = json.loads(json_match.group(0))
+            # Try to find JSON object in response
+            match = re.search(r'\{[\s\S]*\}', llm_response)
+            if match:
+                recommendations = json.loads(match.group(0))
             else:
-                # If no JSON found, structure the response ourselves
-                recommendations = {
-                    "recommended_expertise": [],
-                    "explanation": llm_response
-                }
-                
-                # Try to extract recommendations from text
-                expertise_pattern = r'(?:Expertise|Expert):\s*([^\n]+)'
-                expertise_matches = re.findall(expertise_pattern, llm_response)
-                
-                why_pattern = r'(?:Why|Reason|Rationale|Justification):\s*([^\n]+)'
-                why_matches = re.findall(why_pattern, llm_response)
-                
-                for i, expertise in enumerate(expertise_matches):
-                    why = why_matches[i] if i < len(why_matches) else "To improve the solution"
-                    
-                    recommendations["recommended_expertise"].append({
-                        "name": expertise.strip(),
-                        "reason": why.strip(),
-                        "task_type": expertise.strip().lower().replace(" ", "_")
-                    })
+                recommendations = json.loads(llm_response)
             
-            # Generate tasks for new experts
-            new_expertise_tasks = []
-            for expertise in recommendations.get("recommended_expertise", []):
-                task_type = expertise.get("task_type", "custom")
-                expertise_name = expertise.get("name", "Specialized Expert")
-                reason = expertise.get("reason", "To improve the solution")
-                
-                new_expertise_tasks.append({
-                    "description": f"Apply {expertise_name} to improve the solution",
-                    "task_type": task_type,
-                    "data": {
-                        "context": reason,
-                        "required_expertise": expertise_name,
-                        "new_expertise_needed": True
-                    },
-                    "priority": 3
-                })
+            # Save to file for tracking
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            recommendations_file = os.path.join(RESULTS_DIR, f"expertise_recommendations_{timestamp}.json")
+            os.makedirs(os.path.dirname(recommendations_file), exist_ok=True)
+            
+            with open(recommendations_file, 'w') as f:
+                json.dump(recommendations, f, indent=2)
+            
+            logger.info(f"Saved expertise recommendations to {recommendations_file}")
             
             return {
                 "status": "success",
-                "recommendations": recommendations,
-                "new_expertise_tasks": new_expertise_tasks,
-                "message": f"Identified {len(new_expertise_tasks)} potential new expertise areas"
+                "recommendations": recommendations.get("recommended_experts", []),
+                "recommendations_file": recommendations_file,
+                "message": f"Generated {len(recommendations.get('recommended_experts', []))} expert recommendations"
             }
         except Exception as e:
             logger.error(f"Error parsing expertise recommendations: {str(e)}")
             return {
                 "status": "error",
-                "error": f"Failed to parse expertise recommendations: {str(e)}",
+                "error": f"Failed to parse recommendations: {str(e)}",
                 "raw_output": llm_response
             }
     
@@ -172,3 +131,78 @@ For each recommended expertise, explain:
         behavior=expertise_recommendation_behavior,
         description="Analyzes current state and recommends new expertise needed"
     )
+
+def process(self, task):
+    """Recommend new expertise based on task needs."""
+    self.logger.info(f"Processing task: {task.description}")
+    
+    # Find validation results if available
+    validation_results = task.data.get('validation_results', {})
+    
+    # If no validation results, look for the most recent validation task
+    if not validation_results:
+        # This would need to access tasks from meta_agent, for now use static recommendations
+        pass
+    
+    # Extract insights from validation results
+    inconsistencies = validation_results.get('inconsistencies', [])
+    suggestions = validation_results.get('suggestions', [])
+    
+    # Identify needed expertise areas
+    areas_needing_expertise = []
+    
+    for inconsistency in inconsistencies:
+        issue = inconsistency.get('issue', '').lower()
+        if 'employment status' in issue:
+            areas_needing_expertise.append('employment status evaluation')
+        if 'payment history' in issue:
+            areas_needing_expertise.append('credit history evaluation')
+    
+    for suggestion in suggestions:
+        suggestion_text = suggestion.get('suggestion', '').lower()
+        if 'employment' in suggestion_text:
+            areas_needing_expertise.append('employment status evaluation')
+        if 'payment history' in suggestion_text or 'credit history' in suggestion_text:
+            areas_needing_expertise.append('credit history evaluation')
+    
+    # If no specific areas found, add general ones
+    if not areas_needing_expertise:
+        areas_needing_expertise = ['credit risk assessment', 'rule optimization']
+    
+    # Remove duplicates
+    areas_needing_expertise = list(set(areas_needing_expertise))
+    
+    # Generate recommendations
+    recommendations = []
+    for area in areas_needing_expertise:
+        agent_name = f"{area.replace(' ', '_').title()}_Expert"
+        capabilities = [area, 'rule_refinement']
+        
+        system_prompt = f"""You are an expert in {area} for credit card applications.
+        Your role is to evaluate applications specifically focusing on {area} aspects and provide
+        specialized insights that can improve approval rules and decision-making.
+        
+        When asked to refine rules, suggest specific adjustments that improve accuracy
+        without compromising risk management principles.
+        """
+        
+        recommendations.append({
+            "agent_name": agent_name,
+            "capabilities": capabilities,
+            "system_prompt": system_prompt,
+            "rationale": f"Created to address inconsistencies in {area}"
+        })
+    
+    # Save recommendations
+    timestamp = int(time.time())
+    feedback_iteration = task.data.get('feedback_iteration', 1)
+    recommendation_file = os.path.join(RESULTS_DIR, f'expertise_recommendations_iteration_{feedback_iteration}.json')
+    with open(recommendation_file, 'w') as f:
+        json.dump(recommendations, f, indent=2)
+    
+    return {
+        "status": "success",
+        "recommendations": recommendations,
+        "recommendation_file": recommendation_file,
+        "message": f"Generated {len(recommendations)} expertise recommendations"
+    }

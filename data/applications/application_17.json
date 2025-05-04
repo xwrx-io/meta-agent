@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Alice",
+    "lastName": "Smith",
+    "dateOfBirth": "1987-08-22",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 30000,
+    "employmentStatus": "Unemployed",
+    "existingDebt": 20000
+  },
+  "creditHistory": {
+    "creditScore": 580,
+    "paymentHistory": "Default accounts"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Platinum",
+    "creditLimit": 10000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

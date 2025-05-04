@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Sophia",
+    "lastName": "Martinez",
+    "dateOfBirth": "1991-09-10",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 90000,
+    "employmentStatus": "Employed",
+    "existingDebt": 3000
+  },
+  "creditHistory": {
+    "creditScore": 730,
+    "paymentHistory": "Good"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Standard",
+    "creditLimit": 15000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

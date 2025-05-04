@@ -5,6 +5,7 @@ from meta_agent_system.core.expert_agent import ExpertAgent
 from meta_agent_system.llm.openai_client import OpenAIClient
 from meta_agent_system.utils.logger import get_logger
 from meta_agent_system.config.settings import RESULTS_DIR, APPLICATIONS_DIR
+import re
 
 logger = get_logger(__name__)
 
@@ -48,100 +49,159 @@ Format your rules in a structured JSON format that can be used for validation.
         
         # Get data analysis from context if available
         analysis = ""
-        applications = []
+        analysis_found = False
         
+        # First try to get analysis from context
         for key, value in context.items():
             if isinstance(value, dict) and value.get("agent_name") == "Data Analyzer":
-                if "analysis" in value.get("result", {}):
+                if "result" in value and "analysis" in value["result"]:
                     analysis = value["result"]["analysis"]
+                    analysis_found = True
+                    logger.info("Found analysis in context")
+                    break
+        
+        # If we couldn't find analysis in the context, try to load it from file
+        if not analysis_found:
+            analysis_file = os.path.join(RESULTS_DIR, "credit_card_analysis.json")
+            if os.path.exists(analysis_file):
+                try:
+                    with open(analysis_file, 'r') as f:
+                        analysis_data = json.load(f)
+                        analysis = analysis_data.get("analysis", "")
+                        if analysis:
+                            analysis_found = True
+                            logger.info(f"Loaded analysis from file: {analysis_file}")
+                except Exception as e:
+                    logger.error(f"Error loading analysis from file: {str(e)}")
             
+            # Try text file as backup
+            if not analysis_found:
+                text_file = os.path.join(RESULTS_DIR, "credit_card_analysis.txt")
+                if os.path.exists(text_file):
+                    try:
+                        with open(text_file, 'r') as f:
+                            analysis = f.read()
+                            if analysis:
+                                analysis_found = True
+                                logger.info(f"Loaded analysis from text file: {text_file}")
+                    except Exception as e:
+                        logger.error(f"Error loading analysis from text file: {str(e)}")
+        
+        if not analysis_found:
+            logger.error("No analysis found in context or files")
+            return {
+                "status": "error",
+                "error": "No analysis found in context or files. Data Analyzer must run first."
+            }
+        
+        # Get applications if needed for context
+        applications = []
+        for key, value in context.items():
             if isinstance(value, dict) and value.get("agent_name") == "Data Generator":
                 if "applications" in value.get("result", {}):
                     applications = value["result"]["applications"]
+                    logger.info(f"Found {len(applications)} applications in context")
+                    break
         
-        if not analysis:
-            return {
-                "status": "error",
-                "error": "No analysis found in context. Data Analyzer must run first."
-            }
-        
+        # If no applications in context, try loading from files
         if not applications:
-            # Try to load applications from files if they exist
             if os.path.exists(APPLICATIONS_DIR):
                 application_files = [os.path.join(APPLICATIONS_DIR, f) for f in os.listdir(APPLICATIONS_DIR) 
                                    if f.startswith("application_") and f.endswith(".json")]
                 
-                applications = []
-                for file_path in application_files:
-                    try:
-                        with open(file_path, 'r') as f:
-                            applications.append(json.load(f))
-                    except Exception as e:
-                        logger.error(f"Error loading application from {file_path}: {str(e)}")
+                if application_files:
+                    applications = []
+                    for file_path in application_files:
+                        try:
+                            with open(file_path, 'r') as f:
+                                application = json.load(f)
+                                applications.append(application)
+                        except Exception as e:
+                            logger.error(f"Error loading application from {file_path}: {str(e)}")
         
         # Construct a prompt for rule extraction
         prompt = f"""
 Task Description: {task_description}
 
-Context: {task_data.get('context', '')}
+Based on the analysis of credit card applications, extract clear rules that determine whether an application is approved or rejected.
 
-Data Analysis:
+Analysis of Applications:
 {analysis}
 
-Sample Applications Data (first 3 for reference):
-{json.dumps(applications[:3], indent=2)}
+Please formulate specific rules with clear thresholds that can be used to classify applications. 
 
-Based on the data analysis, please extract specific rules for credit card application approval.
-Formulate clear, precise rules that determine whether an application should be approved or declined.
+Your response MUST be a valid JSON object with the following structure:
+{{
+  "rules": [
+    {{
+      "field": "creditHistory.creditScore",
+      "condition": ">=",
+      "value": 700,
+      "importance": "high"
+    }},
+    {{
+      "field": "financialInformation.annualIncome",
+      "condition": ">=",
+      "value": 50000,
+      "importance": "medium"
+    }},
+    // More rules as needed
+  ],
+  "logic": "all",  // Can be "all" (AND) or "any" (OR)
+  "description": "Human-readable description of the ruleset"
+}}
 
-Your rules should:
-1. Specify exact thresholds for numeric values (e.g., credit score > 700)
-2. Define specific conditions for categorical values
-3. Include any compound conditions (e.g., income > 50000 AND debt_to_income < 0.3)
-4. Be comprehensive enough to classify all applications
-5. Be organized in a logical structure
-
-Format your rules as a JSON object that includes:
-1. A list of rules, each with conditions and an outcome (approve/decline)
-2. The priority or order of rule application if important
-3. Any default outcome if no rules match
-
-This ruleset will be used to validate all applications, so it needs to be precise and comprehensive.
+Create rules that would achieve 100% accuracy on the 20 sample applications. Do not include any explanatory text or markdown formatting in your response, only the valid JSON object.
 """
+        
+        # Include sample applications in the prompt if available
+        if applications:
+            prompt += "\n\nHere are a few sample applications for reference:\n"
+            sample_apps = applications[:2] + applications[10:12]  # 2 approved, 2 declined
+            prompt += json.dumps(sample_apps, indent=2)
         
         # Get response from LLM
         llm_response = llm_client.generate(
             prompt=prompt,
             system_message=system_prompt,
-            temperature=0.7,
+            temperature=0.3,  # Lower temperature for more consistent JSON output
             max_tokens=3000
         )
         
         # Extract JSON rules from the response
         try:
+            # Clean up response
+            cleaned_response = llm_response.strip()
+            cleaned_response = re.sub(r'^```json\s*', '', cleaned_response)
+            cleaned_response = re.sub(r'^```\s*', '', cleaned_response)
+            cleaned_response = re.sub(r'\s*```$', '', cleaned_response)
+            
             # Look for JSON object pattern
-            import re
-            json_match = re.search(r'\{[\s\S]*\}', llm_response)
+            json_match = re.search(r'\{[\s\S]*\}', cleaned_response)
             if json_match:
                 ruleset = json.loads(json_match.group(0))
             else:
                 # If no JSON object found, try parsing the entire output
-                ruleset = json.loads(llm_response)
+                ruleset = json.loads(cleaned_response)
             
             # Save the ruleset to file
             os.makedirs(RESULTS_DIR, exist_ok=True)
             ruleset_file = os.path.join(RESULTS_DIR, "credit_card_approval_rules.json")
             with open(ruleset_file, 'w') as f:
                 json.dump(ruleset, f, indent=2)
+            logger.info(f"Saved ruleset to {ruleset_file}")
             
             return {
                 "status": "success",
-                "ruleset": ruleset,
-                "ruleset_file": ruleset_file,
-                "message": "Extracted rules for credit card application approval"
+                "result": {
+                    "ruleset": ruleset,
+                    "ruleset_file": ruleset_file,
+                    "message": "Extracted rules for credit card application approval"
+                }
             }
         except Exception as e:
             logger.error(f"Error parsing ruleset: {str(e)}")
+            logger.error(f"Raw LLM response: {llm_response}")
             return {
                 "status": "error",
                 "error": f"Failed to parse ruleset: {str(e)}",

@@ -6,6 +6,8 @@ from meta_agent_system.core.expert_agent import ExpertAgent
 from meta_agent_system.utils.logger import get_logger
 from meta_agent_system.config.settings import MAX_ITERATIONS
 from meta_agent_system.core.expert_factory import ExpertFactory
+import logging
+import uuid
 
 logger = get_logger(__name__)
 
@@ -16,7 +18,7 @@ class MetaAgent:
     Attributes:
         name: Name of the meta agent
         agents: List of registered expert agents
-        task_queue: Priority queue for pending tasks
+        task_store: Dictionary to store all tasks by ID
         completed_tasks: List of completed tasks
         results: List of task results
         context: Shared context dictionary for all tasks
@@ -28,13 +30,14 @@ class MetaAgent:
         Args:
             name: Name of the meta agent
         """
+        self.logger = get_logger(__name__)
         self.name = name
         self.agents = []
-        self.task_queue = PriorityQueue()
-        self.completed_tasks = []
         self.task_store = {}  # Dictionary to store all tasks by ID
+        self.completed_tasks = []
         self.results = []
         self.context = {}
+        self.feedback_iterations = 0
         logger.info(f"Initialized meta agent '{name}'")
     
     def register_agent(self, agent: ExpertAgent):
@@ -49,17 +52,14 @@ class MetaAgent:
     
     def add_task(self, task: Task):
         """
-        Add a task to the queue.
+        Add a task to the task store.
         
         Args:
-            task: Task to add to the queue
+            task: Task to add
         """
         # Store task in the task store
         self.task_store[task.id] = task
-        
-        # Add to priority queue
-        self.task_queue.put((task.priority, task.id))
-        logger.info(f"Added task to queue: {task.description} (ID: {task.id})")
+        logger.info(f"Added task to store: {task.description} (ID: {task.id}, Priority: {task.priority})")
     
     def get_task_by_id(self, task_id: str) -> Optional[Task]:
         """
@@ -137,6 +137,50 @@ class MetaAgent:
             logger.error(f"Error creating expert: {str(e)}")
             return None
     
+    def get_runnable_tasks(self):
+        """
+        Get tasks that are ready to run (all dependencies satisfied).
+        
+        Returns:
+            List of Task objects with all dependencies satisfied, sorted by priority
+        """
+        runnable_tasks = []
+        pending_count = 0
+        blocked_count = 0
+        
+        # Check all tasks in the store for pending tasks with satisfied dependencies
+        for task_id, task in self.task_store.items():
+            if task.status == "pending":
+                pending_count += 1
+                if not task.dependencies:
+                    # Task has no dependencies, it's runnable
+                    runnable_tasks.append(task)
+                    continue
+                
+                # Check if all dependencies are satisfied
+                dependencies_satisfied = True
+                unsatisfied_deps = []
+                for dep_id in task.dependencies:
+                    dep_task = self.get_task_by_id(dep_id)
+                    if not dep_task:
+                        logger.warning(f"Task {task.id} depends on missing task {dep_id}")
+                        dependencies_satisfied = False
+                        unsatisfied_deps.append(f"missing:{dep_id}")
+                    elif dep_task.status != "completed":
+                        dependencies_satisfied = False
+                        unsatisfied_deps.append(f"{dep_id}:{dep_task.status}")
+                
+                if dependencies_satisfied:
+                    runnable_tasks.append(task)
+                else:
+                    blocked_count += 1
+                    logger.debug(f"Task '{task.description}' blocked by dependencies: {', '.join(unsatisfied_deps)}")
+        
+        logger.info(f"Task status: {len(runnable_tasks)} runnable, {blocked_count} blocked, {pending_count} total pending")
+        
+        # Sort by priority (lower number = higher priority)
+        return sorted(runnable_tasks, key=lambda t: t.priority)
+
     def solve(self, problem: Dict[str, Any], max_iterations: int = MAX_ITERATIONS) -> Dict[str, Any]:
         """
         Solve a complex problem by coordinating expert agents.
@@ -161,34 +205,45 @@ class MetaAgent:
         # Execute task loop
         iterations = 0
         tasks_completed = 0
+        feedback_loops = 0
         
-        while not self.task_queue.empty() and iterations < max_iterations:
+        # Main execution loop - continue until max iterations or no more pending tasks
+        while iterations < max_iterations:
             iterations += 1
             logger.info(f"Iteration {iterations}/{max_iterations}")
             
-            # Get the highest priority task ID from the queue
-            _, task_id = self.task_queue.get()
+            # Get all runnable tasks (topological sort approach)
+            runnable_tasks = self.get_runnable_tasks()
             
-            # Get the task from the store
-            task = self.get_task_by_id(task_id)
-            
-            if not task:
-                logger.error(f"Task with ID {task_id} not found in task store")
-                continue
-                
-            # Check if all dependencies are satisfied
-            dependencies_satisfied = True
-            for dep_id in task.dependencies:
-                dep_task = self.get_task_by_id(dep_id)
-                if not dep_task or dep_task.status != "completed":
-                    dependencies_satisfied = False
-                    # Put task back in queue with slightly lower priority
-                    self.task_queue.put((task.priority + 1, task.id))
-                    logger.info(f"Task {task.id} waiting for dependency {dep_id}")
+            if not runnable_tasks:
+                # If no tasks are runnable, check if all tasks are complete
+                pending_tasks = [t for _, t in self.task_store.items() if t.status == "pending"]
+                if not pending_tasks:
+                    logger.info("No more tasks to process - all tasks completed")
                     break
+                else:
+                    # Check for circular dependencies or blocked tasks
+                    logger.warning(f"No runnable tasks but {len(pending_tasks)} tasks are pending - possible dependency deadlock")
+                    for task in pending_tasks:
+                        logger.warning(f"Pending task: {task.description} (ID: {task.id}) - Dependencies: {task.dependencies}")
+                    
+                    # If we have the feedback loop, try to use it to break deadlocks
+                    if hasattr(self, 'feedback_loop') and feedback_loops < 5:
+                        logger.info(f"Attempting feedback loop to resolve deadlock (iteration: {feedback_loops})")
+                        should_continue = self.process_feedback_loop()
+                        
+                        if should_continue:
+                            feedback_loops += 1
+                            continue
+                        else:
+                            logger.info("Feedback loop unable to resolve deadlock")
+                            break
+                    else:
+                        # Unable to make progress
+                        break
             
-            if not dependencies_satisfied:
-                continue
+            # Process the highest priority runnable task
+            task = runnable_tasks[0]
             
             # Find an agent that can handle this task
             agent = self.find_agent_for_task(task.task_type)
@@ -238,6 +293,13 @@ class MetaAgent:
                 spawn_tasks = result.get("result", {}).get("spawn_tasks", [])
                 if spawn_tasks:
                     logger.info(f"Spawning {len(spawn_tasks)} new tasks from result")
+                    # Create a map of descriptions to task IDs for dependency mapping
+                    description_to_id = {}
+                    for existing_id, existing_task in self.task_store.items():
+                        description_to_id[existing_task.description] = existing_id
+                    
+                    # First pass: create all tasks to build the ID mapping
+                    new_tasks = []
                     for spawn_task_data in spawn_tasks:
                         spawn_task = Task(
                             description=spawn_task_data.get("description", "Subtask"),
@@ -246,103 +308,163 @@ class MetaAgent:
                             priority=spawn_task_data.get("priority", 5),
                             parent_id=task.id
                         )
-                        # Add dependency relationship
-                        spawn_task.add_dependency(task.id)
+                        new_tasks.append((spawn_task, spawn_task_data))
+                        # Add to task store and update mapping
+                        self.add_task(spawn_task)
+                        description_to_id[spawn_task.description] = spawn_task.id
+                    
+                    # Second pass: set up all dependencies now that all IDs exist
+                    for spawn_task, spawn_task_data in new_tasks:
+                        # Add dependency relationships - map text descriptions to task IDs
+                        text_dependencies = spawn_task_data.get("dependencies", [])
+                        if text_dependencies:
+                            logger.info(f"Task '{spawn_task.description}' has {len(text_dependencies)} dependencies")
+                            
+                        for dep_desc in text_dependencies:
+                            # Look for exact matches first
+                            if dep_desc in description_to_id:
+                                dep_id = description_to_id[dep_desc]
+                                spawn_task.add_dependency(dep_id)
+                                dep_task = self.get_task_by_id(dep_id)
+                                dep_status = dep_task.status if dep_task else "unknown"
+                                logger.info(f"Added dependency: '{spawn_task.description}' → '{dep_desc}' (ID: {dep_id}, Status: {dep_status})")
+                            else:
+                                # If no exact match, look for partial matches
+                                found_match = False
+                                for existing_desc, existing_id in description_to_id.items():
+                                    # Check if one is a substring of the other
+                                    if dep_desc in existing_desc or existing_desc in dep_desc:
+                                        spawn_task.add_dependency(existing_id)
+                                        dep_task = self.get_task_by_id(existing_id)
+                                        dep_status = dep_task.status if dep_task else "unknown"
+                                        logger.info(f"Added partial dependency match: '{spawn_task.description}' → '{existing_desc}' (ID: {existing_id}, Status: {dep_status})")
+                                        found_match = True
+                                        break
+                                
+                                if not found_match:
+                                    logger.warning(f"Could not find dependency '{dep_desc}' for task '{spawn_task.description}'")
                         
                         # Add spawned task to parent's spawn list
                         task.add_spawn_task(spawn_task.id)
-                        
-                        # Add the new task to the queue
-                        self.add_task(spawn_task)
             else:
                 # No agent can handle this task
                 logger.warning(f"No agent found for task type: {task.task_type}")
                 task.mark_failed(f"No agent available for task type: {task.task_type}")
                 self.completed_tasks.append(task)
+            
+            # After processing a batch of tasks, check if we need to run the feedback loop
+            if not self.get_runnable_tasks() and hasattr(self, 'feedback_loop') and feedback_loops < 5:
+                logger.info(f"No more runnable tasks, checking feedback loop (feedback iterations: {feedback_loops})")
+                should_continue = self.process_feedback_loop()
+                
+                if should_continue:
+                    feedback_loops += 1
+                    logger.info(f"Feedback loop {feedback_loops} added new tasks, continuing execution")
+                else:
+                    logger.info("Feedback loop indicated completion or max feedback loops reached")
+                    break
         
-        # After the main task loop completes, check if we should continue with feedback loop
-        if self.task_queue.empty() and hasattr(self, 'feedback_loop'):
-            should_continue = self.process_feedback_loop()
-            if should_continue:
-                # Continue the task loop with the new tasks
-                return self.solve(problem, max_iterations)
+        # Count remaining pending tasks
+        pending_tasks = [t for _, t in self.task_store.items() if t.status == "pending"]
         
         # Compile the final results
         return {
-            "status": "completed" if self.task_queue.empty() else "incomplete",
+            "status": "completed" if not pending_tasks else "incomplete",
             "iterations": iterations,
             "tasks_completed": tasks_completed,
-            "tasks_remaining": self.task_queue.qsize(),
+            "tasks_remaining": len(pending_tasks),
+            "feedback_loops": feedback_loops,
             "results": [result for result in self.results if result["status"] == "completed"],
             "errors": [result for result in self.results if result["status"] == "error"],
             "context": self.context
         }
 
-    def process_feedback_loop(self) -> bool:
-        """
-        Process the feedback loop to determine if we should continue iterating.
+    def process_feedback_loop(self):
+        """Process the feedback loop to get new tasks or determine if we're done."""
+        self.logger.info(f"Processing feedback loop with {len(self.completed_tasks)} completed tasks")
         
-        Returns:
-            True if the loop should continue, False if it should stop
-        """
-        if not hasattr(self, 'feedback_loop'):
-            return False
+        # Call the feedback loop processor
+        new_tasks, complete = self.feedback_loop.process(self.completed_tasks)
         
-        # Process validation results through the feedback loop
-        feedback_result = self.feedback_loop.process_validation_results(self.context)
-        
-        if feedback_result.get("status") == "success":
-            logger.info(f"Feedback loop completed successfully: {feedback_result.get('message', '')}")
-            return False
-        
-        # Create new tasks for the next iteration
-        next_tasks = feedback_result.get("next_tasks", [])
-        if not next_tasks:
-            return False
-        
-        # Add the next tasks to the queue
-        created_task_ids = []
-        for task_data in next_tasks:
-            task = Task(
-                description=task_data.get("description", "Feedback loop task"),
-                task_type=task_data.get("task_type", "general"),
-                data=task_data.get("data", {}),
-                priority=task_data.get("priority", 5)
-            )
-            created_task_ids.append(task.id)
-            self.add_task(task)
-        
-        # Update dependencies between tasks
-        for i, task_data in enumerate(next_tasks):
-            dependencies = task_data.get("dependencies", [])
-            if dependencies:
-                task_id = created_task_ids[i]
-                task = self.get_task_by_id(task_id)
+        # Check for expertise recommendations from completed tasks
+        for task in self.completed_tasks:
+            agent_name = getattr(task, 'agent_assigned', None)
+            result = getattr(task, 'result', {})
+            
+            if agent_name == "Expertise Recommender" and result and result.get("status") == "success":
+                # Found expertise recommendations - try to create new experts
+                self.logger.info("Found expertise recommendations in completed tasks")
                 
-                for dep in dependencies:
-                    # Replace placeholder with actual task ID
-                    if dep == "<REFINEMENT_TASK_ID>" and i > 0:
-                        dep = created_task_ids[0]  # First task is refinement
+                if "recommendations_file" in result:
+                    recommendations_file = result["recommendations_file"]
+                    self.logger.info(f"Processing recommendations from file: {recommendations_file}")
                     
-                    if dep in created_task_ids:
-                        task.add_dependency(dep)
+                    if hasattr(self, 'expert_factory'):
+                        # Create the experts - this needs to be properly implemented
+                        new_experts = self.expert_factory.create_experts_from_recommendations(recommendations_file)
+                        if new_experts:
+                            for expert in new_experts:
+                                self.register_agent(expert)
+                            self.logger.info(f"Created and registered {len(new_experts)} new expert agents")
         
-        # Look for any expertise recommendations
-        for key, value in reversed(list(self.context.items())):
-            if isinstance(value, dict) and value.get("agent_name") == "Expertise Recommender":
-                if "result" in value and "new_expertise_tasks" in value["result"]:
-                    expertise_tasks = value["result"]["new_expertise_tasks"]
-                    if expertise_tasks:
-                        logger.info(f"Adding {len(expertise_tasks)} tasks for new expertise areas")
-                        for task_data in expertise_tasks:
-                            task = Task(
-                                description=task_data.get("description", "Apply new expertise"),
-                                task_type=task_data.get("task_type", "custom"),
-                                data=task_data.get("data", {}),
-                                priority=task_data.get("priority", 4)
-                            )
-                            self.add_task(task)
-                    break
+        # If the success criteria is met, we're done
+        if complete:
+            self.logger.info("Success criteria met! Problem solved.")
+            return False
         
-        logger.info(f"Feedback loop continuing: {feedback_result.get('message', '')}")
-        return True
+        # If we have new tasks, add them to the queue
+        if new_tasks:
+            for task_data in new_tasks:
+                # Create a new Task object and add it to the queue
+                task = Task(
+                    id=str(uuid.uuid4()),
+                    description=task_data.get("description", ""),
+                    task_type=task_data.get("task_type", "expertise_recommendation") if "expertise" in task_data.get("description", "").lower() else "general",
+                    priority=task_data.get("priority", 1),
+                    dependencies=task_data.get("dependencies", []),
+                    data=task_data.get("data", {}),
+                    context=task_data.get("context", {})
+                )
+                self.add_task(task)
+            
+            self.logger.info(f"Feedback loop {self.feedback_iterations + 1} added new tasks, continuing execution")
+            self.feedback_iterations += 1
+            return True
+        
+        self.logger.info("Feedback loop didn't add any new tasks, execution complete")
+        return False
+
+    def process_feedback(self):
+        # Check for recommendations of new expertise
+        logging.info(f"Completed tasks structure: {self.completed_tasks}")
+        logging.info(f"First item type: {type(self.completed_tasks[0]) if self.completed_tasks else 'No items'}")
+        for task_item in self.completed_tasks:
+            # Access attributes directly for Pydantic Task objects
+            task_id = task_item.id if hasattr(task_item, 'id') else None
+            agent_name = task_item.agent_name if hasattr(task_item, 'agent_name') else None
+            result = task_item.result if hasattr(task_item, 'result') else None
+            
+            # Then use these variables in your logic
+            if agent_name == "Expertise Recommender" and result:
+                recommendations = result.get("recommendations", {})
+                new_expertise_tasks = result.get("new_expertise_tasks", [])
+                
+                if new_expertise_tasks:
+                    for expertise_task in new_expertise_tasks:
+                        # Create a new expert agent for the recommended expertise
+                        expertise_name = expertise_task.get("data", {}).get("required_expertise", "Specialized Expert")
+                        task_type = expertise_task.get("task_type", "custom")
+                        
+                        # Create the expert using the factory
+                        factory = ExpertFactory(self.llm_client)
+                        new_expert = factory.create_expert(
+                            name=expertise_name,
+                            expertise=expertise_task.get("data", {}).get("context", ""),
+                            capabilities=[task_type],
+                            task_description=expertise_task.get("description", "")
+                        )
+                        
+                        if new_expert:
+                            # Register the new expert
+                            self.register_agent(new_expert)
+                            logger.info(f"Created and registered new expert agent '{expertise_name}' with capabilities: {[task_type]}")

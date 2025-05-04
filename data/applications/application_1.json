@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Alice",
+    "lastName": "Johnson",
+    "dateOfBirth": "1988-05-23",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 85000,
+    "employmentStatus": "Employed",
+    "existingDebt": 5000
+  },
+  "creditHistory": {
+    "creditScore": 750,
+    "paymentHistory": "Excellent"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Platinum",
+    "creditLimit": 20000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

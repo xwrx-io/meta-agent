@@ -46,6 +46,18 @@ Format your response as a valid JSON Schema object that can be used for validati
         task_description = task.get("description", "")
         task_data = task.get("data", {})
         
+        # Check if schema already exists
+        schema_file = os.path.join(SCHEMA_DIR, "credit_card_application_schema.json")
+        if os.path.exists(schema_file):
+            logger.info(f"Schema file already exists at {schema_file}, skipping generation")
+            return {
+                "status": "success",
+                "result": {
+                    "schema_file": schema_file,
+                    "message": "Reused existing schema file"
+                }
+            }
+        
         # Construct a prompt for schema design
         prompt = f"""
 Task Description: {task_description}

@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "dateOfBirth": "1990-05-12",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 25000,
+    "employmentStatus": "Part-time",
+    "existingDebt": 15000
+  },
+  "creditHistory": {
+    "creditScore": 620,
+    "paymentHistory": "Late payments"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Standard",
+    "creditLimit": 1000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

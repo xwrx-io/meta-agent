@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Michael",
+    "lastName": "Johnson",
+    "dateOfBirth": "1995-11-11",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 18000,
+    "employmentStatus": "Temporary",
+    "existingDebt": 5000
+  },
+  "creditHistory": {
+    "creditScore": 610,
+    "paymentHistory": "Late payments"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Gold",
+    "creditLimit": 7000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

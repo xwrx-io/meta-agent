@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Daniel",
+    "lastName": "Brown",
+    "dateOfBirth": "1969-03-30",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 28000,
+    "employmentStatus": "Retired",
+    "existingDebt": 18000
+  },
+  "creditHistory": {
+    "creditScore": 600,
+    "paymentHistory": "Frequent late payments"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Gold",
+    "creditLimit": 4000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

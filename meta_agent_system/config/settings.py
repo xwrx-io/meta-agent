@@ -42,3 +42,7 @@ DATA_DIR = "data"
 SCHEMA_DIR = os.path.join(DATA_DIR, "schema")
 APPLICATIONS_DIR = os.path.join(DATA_DIR, "applications")
 RESULTS_DIR = os.path.join(DATA_DIR, "results")
+
+# Create directories if they don't exist
+for directory in [APPLICATIONS_DIR, SCHEMA_DIR, RESULTS_DIR]:
+    os.makedirs(directory, exist_ok=True)

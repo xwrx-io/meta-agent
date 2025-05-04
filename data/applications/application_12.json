@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Emily",
+    "lastName": "Smith",
+    "dateOfBirth": "1985-11-23",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 30000,
+    "employmentStatus": "Unemployed",
+    "existingDebt": 20000
+  },
+  "creditHistory": {
+    "creditScore": 580,
+    "paymentHistory": "Missed payments"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Gold",
+    "creditLimit": 5000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "dateOfBirth": "1985-04-12",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 95000,
+    "employmentStatus": "Full-time",
+    "existingDebt": 5000
+  },
+  "creditHistory": {
+    "creditScore": 720,
+    "paymentHistory": "Excellent"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Platinum",
+    "creditLimit": 15000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

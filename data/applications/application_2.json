@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Michael",
+    "lastName": "Smith",
+    "dateOfBirth": "1975-11-16",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 120000,
+    "employmentStatus": "Self-Employed",
+    "existingDebt": 2000
+  },
+  "creditHistory": {
+    "creditScore": 780,
+    "paymentHistory": "Excellent"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Gold",
+    "creditLimit": 25000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

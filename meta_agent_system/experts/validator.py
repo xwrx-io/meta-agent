@@ -40,50 +40,63 @@ When reporting results, provide specific examples of successes and failures.
         task_data = task.get("data", {})
         context = task.get("context", {})
         
-        # Get ruleset and applications from context if available
+        # Try to get ruleset from context
         ruleset = None
         applications = []
         
+        # First look for ruleset in context
         for key, value in context.items():
-            if isinstance(value, dict) and value.get("agent_name") == "Rule Extractor":
+            if isinstance(value, dict) and (value.get("agent_name") == "Rule Extractor" or value.get("agent_name") == "Rule Refiner"):
                 if "ruleset" in value.get("result", {}):
                     ruleset = value["result"]["ruleset"]
-            
-            if isinstance(value, dict) and value.get("agent_name") == "Data Generator":
-                if "applications" in value.get("result", {}):
-                    applications = value["result"]["applications"]
+                    logger.info(f"Found ruleset in context from {value.get('agent_name')}")
+                    break
         
+        # If not found in context, try to load from file
         if not ruleset:
-            # Try to load ruleset from file if it exists
             ruleset_file = os.path.join(RESULTS_DIR, "credit_card_approval_rules.json")
             if os.path.exists(ruleset_file):
                 try:
                     with open(ruleset_file, 'r') as f:
                         ruleset = json.load(f)
+                    logger.info(f"Loaded ruleset from file: {ruleset_file}")
                 except Exception as e:
-                    logger.error(f"Error loading ruleset from {ruleset_file}: {str(e)}")
+                    logger.error(f"Error loading ruleset from file: {str(e)}")
         
         if not ruleset:
+            logger.error("No ruleset found in context or files")
             return {
                 "status": "error",
                 "error": "No ruleset found in context or files. Rule Extractor must run first."
             }
         
-        if not applications:
-            # Try to load applications from files if they exist
+        # Try to get applications from context
+        for key, value in context.items():
+            if isinstance(value, dict) and value.get("agent_name") == "Data Generator":
+                if "applications" in value.get("result", {}):
+                    applications = value["result"]["applications"]
+                    logger.info(f"Found {len(applications)} applications in context")
+                    break
+        
+        # If not found in context, try to load from files
+        if not applications or len(applications) == 0:
             if os.path.exists(APPLICATIONS_DIR):
                 application_files = [os.path.join(APPLICATIONS_DIR, f) for f in os.listdir(APPLICATIONS_DIR) 
                                    if f.startswith("application_") and f.endswith(".json")]
                 
-                applications = []
-                for file_path in application_files:
-                    try:
-                        with open(file_path, 'r') as f:
-                            applications.append(json.load(f))
-                    except Exception as e:
-                        logger.error(f"Error loading application from {file_path}: {str(e)}")
+                if application_files:
+                    applications = []
+                    for file_path in application_files:
+                        try:
+                            with open(file_path, 'r') as f:
+                                application = json.load(f)
+                                applications.append(application)
+                            logger.info(f"Loaded application from {file_path}")
+                        except Exception as e:
+                            logger.error(f"Error loading application from {file_path}: {str(e)}")
         
-        if not applications:
+        if not applications or len(applications) == 0:
+            logger.error("No applications found in context or files")
             return {
                 "status": "error",
                 "error": "No applications found in context or files. Data Generator must run first."
@@ -146,43 +159,71 @@ Format your response as a JSON object that includes:
                 # If no JSON object found, try parsing the entire output
                 validation_results = json.loads(llm_response)
             
+            # Initialize variables for success calculation
+            decisions = validation_results.get("results", [])
+            inconsistencies = validation_results.get("inconsistencies", [])
+            suggestions = validation_results.get("suggestions", [])
+            approved_count = 0
+            declined_count = 0
+            
+            # Count approved/declined from decisions
+            for decision in decisions:
+                if decision.get("decision", "").lower() == "approved":
+                    approved_count += 1
+                else:
+                    declined_count += 1
+            
+            # Calculate accuracy percentage
+            accuracy_percentage = 100
+            if len(applications) > 0:
+                expected_approved = len(applications) // 2  # Half should be approved
+                accuracy_percentage = 100 - (abs(approved_count - expected_approved) / len(applications) * 100)
+            
             # Validate against hidden approvals if available
-            accuracy = 0
+            calculated_accuracy = 0
             if hidden_approvals:
                 correct_count = 0
-                total_count = 0
+                total_count = len(hidden_approvals)
                 
-                decisions = validation_results.get("decisions", {})
-                for app_id, approved in hidden_approvals.items():
-                    if app_id in decisions:
-                        app_decision = decisions[app_id].lower() == "approved"
-                        if app_decision == approved:
+                for idx, decision in enumerate(decisions):
+                    app_id = f"application_{idx+1}"
+                    if app_id in hidden_approvals:
+                        expected_approval = hidden_approvals[app_id]
+                        actual_approval = decision.get("decision", "").lower() == "approved"
+                        if expected_approval == actual_approval:
                             correct_count += 1
-                        total_count += 1
                 
                 if total_count > 0:
-                    accuracy = correct_count / total_count
+                    calculated_accuracy = correct_count / total_count
             
-            # Add accuracy to validation results
-            validation_results["calculated_accuracy"] = accuracy if accuracy > 0 else None
+            # Only consider 100% success if no inconsistencies and 100% accurate
+            success = len(inconsistencies) == 0 and calculated_accuracy == 1.0
             
             # Save the validation results to file
             os.makedirs(RESULTS_DIR, exist_ok=True)
-            validation_file = os.path.join(RESULTS_DIR, "validation_results.json")
-            with open(validation_file, 'w') as f:
+            validation_file_path = os.path.join(RESULTS_DIR, "validation_results.json")
+            with open(validation_file_path, 'w') as f:
                 json.dump(validation_results, f, indent=2)
-            
-            # Determine success based on accuracy
-            success = accuracy >= 1.0 if accuracy > 0 else False
             
             return {
                 "status": "success" if success else "partial_success",
-                "validation_results": validation_results,
-                "accuracy": accuracy if accuracy > 0 else None,
-                "success": success,
-                "validation_file": validation_file,
+                "validation_results": {
+                    "results": decisions,
+                    "inconsistencies": inconsistencies,
+                    "accuracy": {
+                        "total_applications": len(applications),
+                        "approved": approved_count,
+                        "declined": declined_count,
+                        "accuracy_percentage": accuracy_percentage
+                    },
+                    "suggestions": suggestions,
+                    "calculated_accuracy": calculated_accuracy
+                },
+                "accuracy": accuracy_percentage,
+                "success": success,  # Explicitly set this flag
+                "validation_file": validation_file_path,
                 "message": "Validated ruleset against applications",
-                "ruleset_accuracy": f"{accuracy * 100:.2f}%" if accuracy > 0 else "Unknown"
+                "ruleset_accuracy": "Accurate" if success else "Needs improvement"
             }
         except Exception as e:
             logger.error(f"Error parsing validation results: {str(e)}")

@@ -1,0 +1,26 @@
+{
+  "personalInformation": {
+    "firstName": "Michael",
+    "lastName": "Johnson",
+    "dateOfBirth": "1978-02-09",
+    "address": {},
+    "contactDetails": {}
+  },
+  "financialInformation": {
+    "annualIncome": 40000,
+    "employmentStatus": "Contract",
+    "existingDebt": 30000
+  },
+  "creditHistory": {
+    "creditScore": 640,
+    "paymentHistory": "Occasional late payment"
+  },
+  "requestedCreditDetails": {
+    "cardType": "Platinum",
+    "creditLimit": 7000,
+    "requestedCreditLimit": 0
+  },
+  "additionalInformation": {
+    "consentToCreditCheck": true
+  }
+}

@@ -4,6 +4,7 @@ import json
 import time
 import unittest
 from dotenv import load_dotenv
+import glob
 
 # Add parent directory to path to import project modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -62,7 +63,12 @@ class TestEndToEnd(unittest.TestCase):
         
         # Set up feedback loop
         success_checker = SuccessCriteriaChecker(criteria_type="credit_card_rules")
-        feedback_loop = FeedbackLoop(success_checker)
+        expertise_recommender = create_expertise_recommender(self.openai_client)
+        feedback_loop = FeedbackLoop(
+            success_criteria_checker=success_checker,
+            expertise_recommender=expertise_recommender,
+            expert_factory=expert_factory
+        )
         meta.feedback_loop = feedback_loop
         
         # Define the problem
@@ -111,6 +117,10 @@ class TestEndToEnd(unittest.TestCase):
             accuracy = validation["calculated_accuracy"]
             print(f"Achieved accuracy: {accuracy * 100:.2f}%")
             self.assertGreaterEqual(accuracy, 0.9, "Should achieve at least 90% accuracy")
+        
+        # Check if visualization was created
+        visualization_files = glob.glob(os.path.join(RESULTS_DIR, "accuracy_improvement_*.png"))
+        self.assertTrue(len(visualization_files) > 0, "Should have created accuracy visualization")
     
     def _register_experts(self, meta):
         """Register all experts with the meta agent"""

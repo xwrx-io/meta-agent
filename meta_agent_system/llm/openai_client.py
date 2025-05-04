@@ -57,7 +57,7 @@ class OpenAIClient:
         temperature = kwargs.get("temperature", 0.7)
         max_tokens = kwargs.get("max_tokens", 1000)
         system_message = kwargs.get("system_message", "You are a helpful assistant.")
-        use_cache = kwargs.get("use_cache", True)
+        use_cache = kwargs.get("use_cache", False)
         
         # Check cache if enabled
         if use_cache:

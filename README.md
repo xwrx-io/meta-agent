@@ -13,15 +13,18 @@ This system uses a meta-agent that coordinates multiple expert agents to solve c
 - **Feedback Loop**: Implements an iterative improvement cycle with validation and refinement
 - **Success Criteria**: Automatically determines when a solution is satisfactory
 - **Expertise Recommendation**: Identifies when new types of expertise might improve results
+- **Enhanced Metrics & Visualization**: Generates comprehensive run summaries with accuracy metrics and visualizations
+- **Complete System Prompts**: Shows the full system prompts used for new expert agents
+- **Dynamic Testing & Validation**: Tracks rule evolution and improvements over iterations
 
 ## Example Problem: Credit Card Approval Rules Discovery
 
-The system can discover the ruleset used for approving or declining credit card applications by analyzing sample applications without prior knowledge of which ones were approved or declined.
+The system can discover the ruleset used for approving or declining credit card applications by analysing sample applications without prior knowledge of which ones were approved or declined.
 
 The process works as follows:
 1. Create a JSON schema for credit card applications
 2. Generate sample applications (10 approved, 10 declined)
-3. Analyze applications to identify patterns
+3. Analyse applications to identify patterns
 4. Extract rules that determine approval or rejection
 5. Validate rules against all applications
 6. Refine rules iteratively until 100% accuracy is achieved
@@ -102,7 +105,7 @@ graph TD
     RegisterExpert --> AssignExpert
     
     AssignExpert --> TaskExecution[Execute Task]
-    TaskExecution --> ResultsAnalysis[Analyze Results]
+    TaskExecution --> ResultsAnalysis[Analyse Results]
     
     ResultsAnalysis --> SuccessCriteria{Success Criteria Met?}
     SuccessCriteria -->|No| ExpertiseRecommender[Expertise Recommender]
@@ -137,7 +140,7 @@ The system implements a feedback loop for iterative improvement:
 1. **Task Decomposer**: Breaks problems into subtasks and identifies required expertise
 2. **Schema Designer**: Creates data schemas
 3. **Data Generator**: Generates sample data
-4. **Data Analyzer**: Analyzes patterns in data
+4. **Data Analyser**: Analyses patterns in data
 5. **Rule Extractor**: Formulates rules from patterns
 6. **Rule Refiner**: Improves rules based on validation feedback
 7. **Validator**: Tests rules against criteria

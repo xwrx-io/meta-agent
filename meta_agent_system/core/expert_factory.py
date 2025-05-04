@@ -3,6 +3,7 @@ from meta_agent_system.core.expert_agent import ExpertAgent
 from meta_agent_system.llm.openai_client import OpenAIClient
 from meta_agent_system.utils.logger import get_logger
 import json
+import os
 
 logger = get_logger(__name__)
 
@@ -21,7 +22,9 @@ class ExpertFactory:
             llm_client: LLM client for generating agent behavior
         """
         self.llm_client = llm_client
-        logger.info("Initialized expert factory")
+        self.created_experts = {}  # Track created experts by name
+        self.logger = get_logger(__name__)
+        self.logger.info("Initialized expert factory")
     
     def create_expert(self, 
                      name: str, 
@@ -135,3 +138,139 @@ The system prompt should be comprehensive, instructive, and set clear expectatio
         )
         
         return generated_prompt
+
+    def create_experts_from_recommendations(self, recommendations_file):
+        """Create expert agents from recommendations in a file."""
+        self.logger.info(f"Creating experts from recommendations file: {recommendations_file}")
+        
+        new_experts = []
+        
+        # Load recommendations from file
+        try:
+            with open(recommendations_file, 'r') as f:
+                recommendations = json.load(f)
+        except Exception as e:
+            self.logger.error(f"Error loading recommendations from {recommendations_file}: {str(e)}")
+            return []
+        
+        if not recommendations or not isinstance(recommendations, dict) or "recommended_experts" not in recommendations:
+            self.logger.warning(f"Invalid recommendations format: {recommendations}")
+            return []
+        
+        # Create each recommended expert
+        for expert_data in recommendations.get("recommended_experts", []):
+            try:
+                name = expert_data.get("name")
+                capabilities = expert_data.get("capabilities", [])
+                system_prompt = expert_data.get("system_prompt", "")
+                
+                if not name or not capabilities:
+                    self.logger.warning(f"Missing required fields in expert recommendation: {expert_data}")
+                    continue
+                
+                # Check if we already have an expert with this name
+                if name in self.created_experts:
+                    self.logger.info(f"Expert {name} already exists, skipping creation")
+                    continue
+                
+                # Log the new expert creation with its system prompt
+                self.logger.info(f"Creating new expert: {name}")
+                self.logger.info(f"Capabilities: {capabilities}")
+                self.logger.info(f"System prompt: {system_prompt}")
+                
+                # Create a dynamic expert agent
+                new_expert = self.create_dynamic_expert(name, capabilities, system_prompt)
+                if new_expert:
+                    new_experts.append(new_expert)
+                    # Add to created experts map
+                    self.created_experts[name] = new_expert
+                    self.logger.info(f"Successfully created expert: {name}")
+            except Exception as e:
+                self.logger.error(f"Error creating expert from recommendation: {str(e)}")
+        
+        self.logger.info(f"Created {len(new_experts)} new expert agents")
+        return new_experts
+    
+    def create_dynamic_expert(self, name, capabilities, system_prompt):
+        """
+        Create a new dynamic expert agent with custom capabilities and system prompt.
+        
+        Args:
+            name: Name of the expert
+            capabilities: List of capabilities this expert has
+            system_prompt: Custom system prompt for the expert
+            
+        Returns:
+            Expert agent object
+        """
+        self.logger.info(f"Creating dynamic expert: {name}")
+        
+        def dynamic_expert_behavior(task):
+            """Custom behavior function for the dynamic expert"""
+            # Parse the task
+            task_description = task.get("description", "")
+            task_data = task.get("data", {})
+            context = task.get("context", {})
+            
+            # Construct a prompt based on the system_prompt and task
+            prompt = f"""
+Task: {task_description}
+
+Context: {json.dumps(context, indent=2)}
+
+Data: {json.dumps(task_data, indent=2)}
+
+Based on your specialized expertise as {name}, please analyze this task and provide your recommendations.
+"""
+            # Generate a response using the system prompt
+            try:
+                response = self.llm_client.generate(
+                    prompt=prompt,
+                    system_message=system_prompt,
+                    temperature=0.7,
+                    max_tokens=2000
+                )
+                
+                return {
+                    "status": "success",
+                    "agent_name": name,
+                    "result": {
+                        "analysis": response,
+                        "recommendations": self._extract_recommendations(response),
+                        "message": f"Analyzed task using {name} expertise"
+                    }
+                }
+            except Exception as e:
+                self.logger.error(f"Error in dynamic expert {name}: {str(e)}")
+                return {
+                    "status": "error",
+                    "error": str(e)
+                }
+        
+        # Create the expert agent
+        return ExpertAgent(
+            name=name,
+            capabilities=capabilities,
+            behavior=dynamic_expert_behavior,
+            description=f"Dynamically created expert with expertise in: {', '.join(capabilities)}"
+        )
+    
+    def _extract_recommendations(self, text):
+        """Extract structured recommendations from text response"""
+        try:
+            # Look for JSON pattern in the text
+            import re
+            json_match = re.search(r'\{[\s\S]*\}', text)
+            if json_match:
+                return json.loads(json_match.group(0))
+            
+            # If no JSON found, create a simple structure
+            recommendations = []
+            for line in text.split('\n'):
+                if line.strip().startswith('-') or line.strip().startswith('*'):
+                    recommendations.append(line.strip())
+            
+            return {"recommendations": recommendations}
+        except:
+            # Fall back to returning the whole text
+            return {"raw_text": text}

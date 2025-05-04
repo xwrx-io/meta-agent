@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Credit Card Application",
+  "type": "object",
+  "properties": {
+    "personalInformation": {
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "type": "string",
+          "description": "Applicant's first name"
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Applicant's last name"
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "format": "date",
+          "description": "Applicant's date of birth in YYYY-MM-DD format"
+        },
+        "address": {
+          "type": "object",
+          "properties": {
+            "streetAddress": {
+              "type": "string",
+              "description": "Street address of the applicant"
+            },
+            "city": {
+              "type": "string",
+              "description": "City of residence"
+            },
+            "state": {
+              "type": "string",
+              "description": "State of residence"
+            },
+            "postalCode": {
+              "type": "string",
+              "pattern": "^[0-9]{5}(?:-[0-9]{4})?$",
+              "description": "Postal code, which can be in the format 12345 or 12345-6789"
+            }
+          },
+          "required": [
+            "streetAddress",
+            "city",
+            "state",
+            "postalCode"
+          ]
+        },
+        "contactDetails": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Applicant's email address"
+            },
+            "phoneNumber": {
+              "type": "string",
+              "pattern": "^\\+?[1-9]\\d{1,14}$",
+              "description": "Applicant's phone number in international format"
+            }
+          },
+          "required": [
+            "email",
+            "phoneNumber"
+          ]
+        }
+      },
+      "required": [
+        "firstName",
+        "lastName",
+        "dateOfBirth",
+        "address",
+        "contactDetails"
+      ]
+    },
+    "financialInformation": {
+      "type": "object",
+      "properties": {
+        "employmentStatus": {
+          "type": "string",
+          "enum": [
+            "Employed",
+            "Self-Employed",
+            "Unemployed",
+            "Student",
+            "Retired"
+          ],
+          "description": "Applicant's current employment status"
+        },
+        "annualIncome": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Applicant's annual income in USD"
+        },
+        "existingDebt": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Current amount of existing debt in USD"
+        }
+      },
+      "required": [
+        "employmentStatus",
+        "annualIncome"
+      ]
+    },
+    "creditHistory": {
+      "type": "object",
+      "properties": {
+        "creditScore": {
+          "type": "integer",
+          "minimum": 300,
+          "maximum": 850,
+          "description": "Applicant's credit score, typically ranging from 300 to 850"
+        },
+        "paymentHistory": {
+          "type": "string",
+          "enum": [
+            "Good",
+            "Average",
+            "Poor"
+          ],
+          "description": "Summary of the applicant's payment history"
+        }
+      },
+      "required": [
+        "creditScore",
+        "paymentHistory"
+      ]
+    },
+    "requestedCreditDetails": {
+      "type": "object",
+      "properties": {
+        "cardType": {
+          "type": "string",
+          "enum": [
+            "Standard",
+            "Gold",
+            "Platinum"
+          ],
+          "description": "Type of credit card the applicant is requesting"
+        },
+        "requestedCreditLimit": {
+          "type": "number",
+          "minimum": 100,
+          "description": "Requested credit limit in USD"
+        }
+      },
+      "required": [
+        "cardType",
+        "requestedCreditLimit"
+      ]
+    },
+    "additionalInformation": {
+      "type": "object",
+      "properties": {
+        "consentToCreditCheck": {
+          "type": "boolean",
+          "description": "Indicates if the applicant consents to a credit check"
+        }
+      },
+      "required": [
+        "consentToCreditCheck"
+      ]
+    }
+  },
+  "required": [
+    "personalInformation",
+    "financialInformation",
+    "creditHistory",
+    "requestedCreditDetails",
+    "additionalInformation"
+  ]
+}
