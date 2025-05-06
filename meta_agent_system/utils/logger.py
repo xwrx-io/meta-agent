@@ -2,6 +2,25 @@ import logging
 import colorlog
 import os
 from datetime import datetime
+import sys
+import re
+
+# Define a filter to suppress specific warning messages
+class SuppressSpecificWarningsFilter(logging.Filter):
+    def filter(self, record):
+        # Allow all non-warning messages through
+        if record.levelno != logging.WARNING:
+            return True
+            
+        # Check if this is a rule format warning we want to suppress
+        if record.levelno == logging.WARNING and hasattr(record, 'msg'):
+            if "Unrecognized rule format" in record.msg or "Unrecognized condition" in record.msg:
+                return False  # Suppress these specific warnings
+                
+        return True  # Allow all other warnings
+
+# Store loggers in a dictionary to avoid creating duplicates
+_loggers = {}
 
 def setup_logger(name, log_level=logging.INFO, log_file=None):
     """
@@ -65,7 +84,62 @@ def setup_logger(name, log_level=logging.INFO, log_file=None):
     
     return logger
 
-def get_logger(module_name):
+def get_logger(name):
+    """
+    Get a logger with the specified name.
+    
+    Args:
+        name: The name of the logger
+        
+    Returns:
+        A logger object
+    """
+    if name in _loggers:
+        return _loggers[name]
+    
+    # Create logger
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    
+    # Stop propagation to avoid duplicate logs
+    logger.propagate = False
+    
+    # Clear any existing handlers
+    if logger.hasHandlers():
+        logger.handlers.clear()
+    
+    # Create handlers
+    console_handler = colorlog.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    
+    # Add the filter to suppress specific warnings
+    if name == "meta_agent_system.experts.validator":
+        console_handler.addFilter(SuppressSpecificWarningsFilter())
+    
+    # Add formatters
+    console_format = '%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    console_formatter = colorlog.ColoredFormatter(
+        console_format,
+        datefmt='%Y-%m-%d %H:%M:%S',
+        log_colors={
+            'DEBUG': 'cyan',
+            'INFO': 'green',
+            'WARNING': 'yellow',
+            'ERROR': 'red',
+            'CRITICAL': 'red,bg_white',
+        }
+    )
+    console_handler.setFormatter(console_formatter)
+    
+    # Add handlers to logger
+    logger.addHandler(console_handler)
+    
+    # Save logger for reuse
+    _loggers[name] = logger
+    
+    return logger
+
+def get_logger_for_module(module_name):
     """Get a logger for a specific module"""
     log_dir = "logs"
     if not os.path.exists(log_dir):
