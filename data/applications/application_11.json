@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 8673",
-    "age": 31,
-    "address": "594 Main St",
-    "phoneNumber": "555-3343",
-    "yearsAtAddress": 9
+    "name": "Applicant 4882",
+    "age": 39,
+    "address": "712 Main St",
+    "phoneNumber": "555-7432",
+    "yearsAtAddress": 16
   },
   "creditHistory": {
-    "creditScore": 692,
-    "creditTier": "Good",
+    "creditScore": 811,
+    "creditTier": "Excellent",
     "paymentHistory": "Good",
-    "creditUtilization": 32,
-    "creditAgeYears": 4,
-    "recentInquiries": 7
+    "creditUtilization": 53,
+    "creditAgeYears": 19,
+    "recentInquiries": 6
   },
   "financialInformation": {
-    "annualIncome": 21793,
-    "monthlyIncome": 1816,
-    "incomeTier": "Low",
-    "existingDebt": 8457,
-    "debtRatio": 0.3880761189415878,
+    "annualIncome": 50570,
+    "monthlyIncome": 4214,
+    "incomeTier": "Medium",
+    "existingDebt": 16123,
+    "debtRatio": 0.31884013267270006,
     "debtTier": "Medium",
-    "employmentStatus": "Part-time",
-    "yearsEmployed": 14,
-    "monthlyExpenses": 4815,
-    "savings": 19542
+    "employmentStatus": "Employed",
+    "yearsEmployed": 15,
+    "monthlyExpenses": 1365,
+    "savings": 45755
   }
 }

@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import time
+import argparse
 from dotenv import load_dotenv
 from meta_agent_system.utils.logger import get_logger
 from meta_agent_system.utils.helpers import save_json, get_timestamp, ensure_directory_exists
@@ -19,32 +20,74 @@ from meta_agent_system.core.summary_generator import generate_summary
 # Configure logging
 logger = get_logger(__name__)
 
-def main():
-    """Credit card rule discovery system main entry point"""
-    # Load environment variables
-    load_dotenv()
+def get_initial_ruleset_from_scratch(openai_client):
+    """Generate an initial ruleset from scratch using the LLM"""
+    print("Generating initial ruleset from scratch using LLM...")
     
-    # Ensure OpenAI API key is set
-    if not os.getenv("OPENAI_API_KEY"):
-        print("ERROR: OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.")
-        sys.exit(1)
+    # Create a prompt asking the LLM to generate an initial ruleset
+    prompt = """
+    You are a Credit Card Approval Expert. Create an initial ruleset for credit card approvals.
     
-    print("\n=== Credit Card Rule Discovery System ===\n")
-    print("Initializing system...")
+    The ruleset should be based on these potential factors:
+    - creditHistory.creditTier (Very Poor, Poor, Good, Very Good, Excellent)
+    - financialInformation.incomeTier (Low, Medium, High, Very High)
+    - financialInformation.debtTier (Very Low, Low, Medium, High)
     
-    # Initialize OpenAI client
-    openai_client = OpenAIClient()
+    Please provide a simple ruleset in JSON format with the following structure:
+    {
+      "logic": "any",  // Use "any" or "all" 
+      "rules": [
+        // 2-4 simple rules
+      ],
+      "description": "A brief explanation of the ruleset"
+    }
     
-    # Create expert components
-    validator = create_validator(openai_client)
-    rule_analyzer = create_rule_analyzer(openai_client)
-    rule_refiner = create_rule_refiner(openai_client)
+    Make the rules simple but reasonable for a starting point.
+    """
     
-    # Ensure results directory exists
-    os.makedirs(RESULTS_DIR, exist_ok=True)
+    # Generate the ruleset
+    response = openai_client.generate(
+        prompt=prompt,
+        system_message="You are a Credit Card Approval Expert that helps design approval rules.",
+        temperature=0.3,
+        expert_name="Initial Rule Generator"
+    )
     
-    # Initial ruleset
-    initial_ruleset = {
+    # Extract JSON from the response
+    try:
+        # Find JSON in response (simple approach)
+        json_start = response.find('{')
+        json_end = response.rfind('}') + 1
+        if json_start >= 0 and json_end > json_start:
+            json_str = response[json_start:json_end]
+            initial_ruleset = json.loads(json_str)
+            
+            # Add timestamp and iteration
+            initial_ruleset["timestamp"] = int(time.time())
+            initial_ruleset["iteration"] = 0
+            
+            return initial_ruleset
+    except Exception as e:
+        logger.error(f"Error parsing LLM response: {str(e)}")
+    
+    # Fallback to a minimal ruleset
+    return {
+        "logic": "any",
+        "rules": [
+            {
+                "field": "creditHistory.creditTier",
+                "condition": "equals",
+                "threshold": "Excellent"
+            }
+        ],
+        "description": "Fallback minimal ruleset",
+        "timestamp": int(time.time()),
+        "iteration": 0
+    }
+
+def get_default_initial_ruleset():
+    """Return the default hardcoded initial ruleset"""
+    return {
         "logic": "any",
         "rules": [
             {
@@ -67,6 +110,44 @@ def main():
         "timestamp": int(time.time()),
         "iteration": 0
     }
+
+def main():
+    """Credit card rule discovery system main entry point"""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Credit Card Rule Discovery System")
+    parser.add_argument('--from-scratch', action='store_true', 
+                        help='Start with a ruleset generated from scratch instead of using the default')
+    args = parser.parse_args()
+    
+    # Load environment variables
+    load_dotenv()
+    
+    # Ensure OpenAI API key is set
+    if not os.getenv("OPENAI_API_KEY"):
+        print("ERROR: OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.")
+        sys.exit(1)
+    
+    print("\n=== Credit Card Rule Discovery System ===\n")
+    print("Initializing system...")
+    
+    # Initialize OpenAI client
+    openai_client = OpenAIClient()
+    
+    # Create expert components
+    validator = create_validator(openai_client)
+    rule_analyzer = create_rule_analyzer(openai_client)
+    rule_refiner = create_rule_refiner(openai_client)
+    
+    # Ensure results directory exists
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+    
+    # Get initial ruleset based on command line flag
+    if args.from_scratch:
+        initial_ruleset = get_initial_ruleset_from_scratch(openai_client)
+        print("Starting with LLM-generated ruleset")
+    else:
+        initial_ruleset = get_default_initial_ruleset()
+        print("Starting with default ruleset")
     
     # Save initial ruleset
     ruleset_file = os.path.join(RESULTS_DIR, "credit_card_approval_rules.json")

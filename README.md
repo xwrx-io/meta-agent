@@ -74,7 +74,7 @@ echo "OPENAI_API_KEY=your-api-key-here" > .env
 ```bash
 python data_generation.py
 ```
-This creates 50 credit card applications with clear approval patterns.
+This creates 20 credit card applications with clear approval patterns.
 
 2. Run the rule discovery system:
 ```bash
@@ -82,7 +82,13 @@ python meta_agent_system/main.py
 ```
 The system will process through multiple iterations, each refining the ruleset to improve accuracy.
 
-3. View results:
+3. To start with an LLM-generated ruleset (instead of default rules):
+```bash
+python meta_agent_system/main.py --from-scratch
+```
+This uses the LLM to generate the initial ruleset based on credit approval domain knowledge.
+
+4. View results:
 Results and visualizations are saved to the `data/results/` directory, including:
 - Final ruleset in `credit_card_approval_rules.json`
 - Validation metrics in `validation_history.json`
@@ -95,7 +101,8 @@ Results and visualizations are saved to the `data/results/` directory, including
 To change how applications are generated:
 1. Edit `data_generation.py`
 2. Adjust the approval criteria in the `should_approve()` function
-3. Run `python data_generation.py` to generate new applications
+3. Change the number of applications by modifying `application_count`
+4. Run `python data_generation.py` to generate new applications
 
 ### Tuning the Learning Process
 
@@ -103,6 +110,7 @@ To optimize the learning process:
 1. Adjust LLM prompts in `meta_agent_system/experts/rule_refiner.py`
 2. Change the application number in `data_generation.py` (20-30 recommended)
 3. Modify the maximum iterations in `meta_agent_system/main.py`
+4. Use `--from-scratch` flag to experiment with different initial rulesets
 
 ## How It Works
 
@@ -119,7 +127,7 @@ graph TD
 ```
 
 1. **Application Generation**: Creates credit applications with various attributes
-2. **Initial Ruleset**: Starts with simple rules based on common factors
+2. **Initial Ruleset**: Starts with predefined rules or LLM-generated rules (when using `--from-scratch`)
 3. **Validation**: Tests rules against applications and measures accuracy
 4. **Pattern Analysis**: Examines approved, declined, and misclassified applications
 5. **Rule Refinement**: Creates improved rules based on observed patterns

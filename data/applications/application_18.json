@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 8076",
-    "age": 23,
-    "address": "139 Main St",
-    "phoneNumber": "555-1726",
-    "yearsAtAddress": 2
+    "name": "Applicant 2338",
+    "age": 59,
+    "address": "771 Main St",
+    "phoneNumber": "555-1357",
+    "yearsAtAddress": 12
   },
   "creditHistory": {
-    "creditScore": 796,
-    "creditTier": "Excellent",
+    "creditScore": 709,
+    "creditTier": "Good",
     "paymentHistory": "Good",
-    "creditUtilization": 28,
-    "creditAgeYears": 11,
-    "recentInquiries": 4
+    "creditUtilization": 30,
+    "creditAgeYears": 5,
+    "recentInquiries": 9
   },
   "financialInformation": {
-    "annualIncome": 64720,
-    "monthlyIncome": 5393,
+    "annualIncome": 53871,
+    "monthlyIncome": 4489,
     "incomeTier": "Medium",
-    "existingDebt": 23383,
-    "debtRatio": 0.3613045427877212,
-    "debtTier": "Medium",
+    "existingDebt": 8074,
+    "debtRatio": 0.1498934211001151,
+    "debtTier": "Very Low",
     "employmentStatus": "Employed",
-    "yearsEmployed": 5,
-    "monthlyExpenses": 3325,
-    "savings": 70763
+    "yearsEmployed": 6,
+    "monthlyExpenses": 4140,
+    "savings": 29102
   }
 }

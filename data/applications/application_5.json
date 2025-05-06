@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 4416",
-    "age": 50,
-    "address": "622 Main St",
-    "phoneNumber": "555-5177",
+    "name": "Applicant 6595",
+    "age": 40,
+    "address": "991 Main St",
+    "phoneNumber": "555-2872",
     "yearsAtAddress": 17
   },
   "creditHistory": {
-    "creditScore": 547,
-    "creditTier": "Very Poor",
-    "paymentHistory": "Good",
-    "creditUtilization": 71,
-    "creditAgeYears": 7,
+    "creditScore": 663,
+    "creditTier": "Good",
+    "paymentHistory": "Excellent",
+    "creditUtilization": 41,
+    "creditAgeYears": 19,
     "recentInquiries": 7
   },
   "financialInformation": {
-    "annualIncome": 64136,
-    "monthlyIncome": 5344,
+    "annualIncome": 63425,
+    "monthlyIncome": 5285,
     "incomeTier": "Medium",
-    "existingDebt": 23157,
-    "debtRatio": 0.361061995291684,
+    "existingDebt": 22383,
+    "debtRatio": 0.3529117575776026,
     "debtTier": "Medium",
     "employmentStatus": "Self-employed",
-    "yearsEmployed": 14,
-    "monthlyExpenses": 4082,
-    "savings": 72908
+    "yearsEmployed": 15,
+    "monthlyExpenses": 3047,
+    "savings": 67354
   }
 }

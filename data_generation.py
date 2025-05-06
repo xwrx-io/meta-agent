@@ -268,8 +268,8 @@ def should_approve(app):
     return False
 
 def generate_new_applications():
-    """Generate 50 applications with nuanced approval patterns"""
-    application_count = 50
+    """Generate 20 applications with nuanced approval patterns"""
+    application_count = 20
     
     # Clear previous files
     for existing_file in os.listdir(APPLICATIONS_DIR):
@@ -283,26 +283,26 @@ def generate_new_applications():
         if os.path.isfile(file_path):
             os.remove(file_path)
     
-    # Define application types to generate with more variety
+    # Define application types to generate with adjusted counts for 20 applications
     application_types = [
         # Standard approve cases
-        "approve_high_score", "approve_high_score", "approve_high_score",
-        "approve_high_income", "approve_high_income", "approve_high_income",
-        "approve_low_debt", "approve_low_debt", "approve_low_debt",
+        "approve_high_score", "approve_high_score",
+        "approve_high_income", "approve_high_income",
+        "approve_low_debt", "approve_low_debt",
         
         # New approve cases
-        "approve_balanced_factors", "approve_balanced_factors",
-        "approve_high_income_high_debt", "approve_high_income_high_debt",
-        "approve_edge_case", "approve_edge_case",
+        "approve_balanced_factors",
+        "approve_high_income_high_debt",
+        "approve_edge_case",
         
         # Standard decline cases
-        "decline_low_score", "decline_low_score", "decline_low_score",
-        "decline_low_income", "decline_low_income", "decline_low_income",
-        "decline_high_debt", "decline_high_debt", "decline_high_debt",
+        "decline_low_score", "decline_low_score",
+        "decline_low_income", "decline_low_income",
+        "decline_high_debt", "decline_high_debt",
         
         # New decline cases
-        "decline_multiple_issues", "decline_multiple_issues",
-        "decline_edge_case", "decline_edge_case",
+        "decline_multiple_issues",
+        "decline_edge_case",
     ]
     
     # Fill the rest with random applications
