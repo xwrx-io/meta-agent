@@ -17,6 +17,12 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from meta_agent_system.experts.misclassification_analyzer import analyze_misclassifications
 from meta_agent_system.core.summary_generator import generate_summary
+import re
+import textwrap
+from colorama import Fore, Back, Style, init
+
+# Initialize colorama
+init()
 
 # Configure logging
 logger = get_logger(__name__)
@@ -218,8 +224,8 @@ def main():
                 recommendations = expertise_result.get("recommendations", [])
                 recommendations_file = expertise_result.get("recommendations_file", "")
                 
-                print(f"\nIdentified {len(recommendations)} potential expert types that could help:\n")
-                print("=" * 80)
+                print(f"\n{Fore.CYAN}Identified {len(recommendations)} potential expert types that could help:{Style.RESET_ALL}\n")
+                print(f"{Fore.CYAN}{'=' * 80}{Style.RESET_ALL}")
                 
                 for i, expert in enumerate(recommendations, 1):
                     expert_name = expert.get('name', 'Unnamed Expert')
@@ -227,43 +233,135 @@ def main():
                     system_prompt = expert.get('system_prompt', 'No system prompt provided')
                     
                     # Format with clear visual separation and structure
-                    print(f"\n{'-' * 80}")
-                    print(f"EXPERT {i}: {expert_name}")
-                    print(f"{'-' * 80}")
+                    print(f"\n{Fore.CYAN}{'-' * 80}{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}EXPERT {i}: {expert_name}{Style.RESET_ALL}")
+                    print(f"{Fore.CYAN}{'-' * 80}{Style.RESET_ALL}")
                     
                     # Format capabilities as a bulleted list
-                    print("\nCAPABILITIES:")
+                    print(f"\n{Fore.GREEN}CAPABILITIES:{Style.RESET_ALL}")
                     for capability in capabilities:
-                        print(f"  • {capability}")
+                        print(f"{Fore.WHITE}  • {capability}{Style.RESET_ALL}")
                     
-                    # Format system prompt with proper indentation
-                    print("\nSYSTEM PROMPT:")
-                    # Wrap and indent the system prompt for better readability
-                    wrapped_prompt = ""
-                    for line in system_prompt.split('\n'):
-                        line = line.strip()
-                        if line:
-                            # Indent wrapped lines
-                            words = line.split()
-                            current_line = "  "
-                            for word in words:
-                                if len(current_line) + len(word) + 1 > 78:  # +1 for space
-                                    wrapped_prompt += current_line + "\n"
-                                    current_line = "  " + word
-                                else:
-                                    if current_line == "  ":
-                                        current_line += word
-                                    else:
-                                        current_line += " " + word
-                            if current_line:
-                                wrapped_prompt += current_line + "\n"
+                    # Format system prompt with proper indentation and JSON formatting
+                    print(f"\n{Fore.GREEN}SYSTEM PROMPT:{Style.RESET_ALL}")
+                    
+                    # Improved JSON extraction and formatting
+                    # First, extract all text before any JSON
+                    json_start = system_prompt.find('{"')
+                    if json_start == -1:
+                        json_start = system_prompt.find('REQUIRED JSON')
+                        if json_start != -1:
+                            # Find the actual JSON after the REQUIRED JSON text
+                            json_text = system_prompt[json_start:]
+                            # Look for opening brace
+                            brace_start = json_text.find('{')
+                            if brace_start != -1:
+                                prefix = system_prompt[:json_start + brace_start]
+                                json_text = json_text[brace_start:]
+                                
+                                # Find matching closing brace
+                                brace_count = 0
+                                for i, char in enumerate(json_text):
+                                    if char == '{':
+                                        brace_count += 1
+                                    elif char == '}':
+                                        brace_count -= 1
+                                        if brace_count == 0:
+                                            json_str = json_text[:i+1]
+                                            suffix = json_text[i+1:]
+                                            break
+                                
+                                # Format the parts
+                                if prefix.strip():
+                                    wrapped_prefix = textwrap.fill(prefix.strip(), width=76, 
+                                                          initial_indent="  ", subsequent_indent="  ")
+                                    print(f"{Fore.WHITE}{wrapped_prefix}{Style.RESET_ALL}")
+                                
+                                # Try to parse and pretty-print the JSON
+                                try:
+                                    # Replace smart quotes with straight quotes
+                                    json_str = json_str.replace('"', '"').replace('"', '"')
+                                    parsed_json = json.loads(json_str)
+                                    pretty_json = json.dumps(parsed_json, indent=4)
+                                    
+                                    # Print the JSON with syntax highlighting
+                                    print(f"\n{Fore.MAGENTA}  RESPONSE FORMAT:{Style.RESET_ALL}")
+                                    for line in pretty_json.split('\n'):
+                                        indented_line = "    " + line
+                                        # Highlight keys in cyan
+                                        highlighted = re.sub(r'(".*?"):', f"{Fore.CYAN}\\1{Fore.RESET}:", indented_line)
+                                        # Highlight values in white
+                                        highlighted = re.sub(r': (".*?")(,?)', f": {Fore.WHITE}\\1{Fore.RESET}\\2", highlighted)
+                                        print(highlighted)
+                                    print()
+                                except json.JSONDecodeError:
+                                    # If JSON parsing fails, print as is
+                                    print(f"{Fore.WHITE}  {json_str}{Style.RESET_ALL}")
+                                
+                                if suffix.strip():
+                                    wrapped_suffix = textwrap.fill(suffix.strip(), width=76, 
+                                                          initial_indent="  ", subsequent_indent="  ")
+                                    print(f"{Fore.WHITE}{wrapped_suffix}{Style.RESET_ALL}")
+                            else:
+                                # If can't find JSON structure, print normally
+                                wrapped = textwrap.fill(system_prompt, width=76, 
+                                               initial_indent="  ", subsequent_indent="  ")
+                                print(f"{Fore.WHITE}{wrapped}{Style.RESET_ALL}")
                         else:
-                            wrapped_prompt += "\n"
-                    print(wrapped_prompt)
+                            # If no JSON mentioned, print normally
+                            wrapped = textwrap.fill(system_prompt, width=76, 
+                                           initial_indent="  ", subsequent_indent="  ")
+                            print(f"{Fore.WHITE}{wrapped}{Style.RESET_ALL}")
+                    else:
+                        # There is JSON at the beginning
+                        prefix = system_prompt[:json_start]
+                        json_text = system_prompt[json_start:]
+                        
+                        # Format as above
+                        if prefix.strip():
+                            wrapped_prefix = textwrap.fill(prefix.strip(), width=76, 
+                                               initial_indent="  ", subsequent_indent="  ")
+                            print(f"{Fore.WHITE}{wrapped_prefix}{Style.RESET_ALL}")
+                        
+                        # Find end of JSON
+                        brace_count = 0
+                        for i, char in enumerate(json_text):
+                            if char == '{':
+                                brace_count += 1
+                            elif char == '}':
+                                brace_count -= 1
+                                if brace_count == 0:
+                                    json_str = json_text[:i+1]
+                                    suffix = json_text[i+1:]
+                                    break
+                        
+                        # Try to parse and pretty-print the JSON
+                        try:
+                            parsed_json = json.loads(json_str)
+                            pretty_json = json.dumps(parsed_json, indent=4)
+                            
+                            # Print with highlighting
+                            print(f"\n{Fore.MAGENTA}  RESPONSE FORMAT:{Style.RESET_ALL}")
+                            for line in pretty_json.split('\n'):
+                                indented_line = "    " + line
+                                # Highlight keys in cyan
+                                highlighted = re.sub(r'(".*?"):', f"{Fore.CYAN}\\1{Fore.RESET}:", indented_line)
+                                # Highlight values in white
+                                highlighted = re.sub(r': (".*?")(,?)', f": {Fore.WHITE}\\1{Fore.RESET}\\2", highlighted)
+                                print(highlighted)
+                            print()
+                        except json.JSONDecodeError:
+                            # If JSON parsing fails, print as is
+                            print(f"{Fore.WHITE}  {json_str}{Style.RESET_ALL}")
+                        
+                        if suffix.strip():
+                            wrapped_suffix = textwrap.fill(suffix.strip(), width=76, 
+                                               initial_indent="  ", subsequent_indent="  ")
+                            print(f"{Fore.WHITE}{wrapped_suffix}{Style.RESET_ALL}")
                 
-                print(f"\n{'-' * 80}")
-                print(f"\nDetailed expertise recommendations saved to: {recommendations_file}")
-                print("=" * 80)
+                print(f"\n{Fore.CYAN}{'-' * 80}{Style.RESET_ALL}")
+                print(f"\n{Fore.GREEN}Detailed expertise recommendations saved to:{Style.RESET_ALL} {Fore.WHITE}{recommendations_file}{Style.RESET_ALL}")
+                print(f"{Fore.CYAN}{'=' * 80}{Style.RESET_ALL}")
             else:
                 print(f"Failed to generate expertise recommendations: {expertise_result.get('message', 'Unknown error')}")
             
