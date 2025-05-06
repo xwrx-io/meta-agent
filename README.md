@@ -82,11 +82,17 @@ python meta_agent_system/main.py
 ```
 The system will process through multiple iterations, each refining the ruleset to improve accuracy.
 
-3. To start with an LLM-generated ruleset (instead of default rules):
+3. To customize the execution:
 ```bash
+# Start with an LLM-generated ruleset instead of default rules
 python meta_agent_system/main.py --from-scratch
+
+# Set a custom maximum number of iterations (default is 10)
+python meta_agent_system/main.py --max-iterations 15
+
+# Combine multiple options
+python meta_agent_system/main.py --from-scratch --max-iterations 20
 ```
-This uses the LLM to generate the initial ruleset based on credit approval domain knowledge.
 
 4. View results:
 Results and visualizations are saved to the `data/results/` directory, including:

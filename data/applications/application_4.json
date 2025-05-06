@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 6174",
-    "age": 61,
-    "address": "913 Main St",
-    "phoneNumber": "555-4543",
-    "yearsAtAddress": 10
+    "name": "Applicant 2623",
+    "age": 57,
+    "address": "617 Main St",
+    "phoneNumber": "555-3009",
+    "yearsAtAddress": 12
   },
   "creditHistory": {
-    "creditScore": 711,
-    "creditTier": "Good",
+    "creditScore": 832,
+    "creditTier": "Excellent",
     "paymentHistory": "Good",
-    "creditUtilization": 87,
-    "creditAgeYears": 7,
-    "recentInquiries": 4
+    "creditUtilization": 24,
+    "creditAgeYears": 5,
+    "recentInquiries": 3
   },
   "financialInformation": {
-    "annualIncome": 101704,
-    "monthlyIncome": 8475,
-    "incomeTier": "Very High",
-    "existingDebt": 35325,
-    "debtRatio": 0.3473388890286164,
+    "annualIncome": 63645,
+    "monthlyIncome": 5303,
+    "incomeTier": "Medium",
+    "existingDebt": 24662,
+    "debtRatio": 0.3874999517612976,
     "debtTier": "Medium",
     "employmentStatus": "Employed",
-    "yearsEmployed": 10,
-    "monthlyExpenses": 2001,
-    "savings": 75689
+    "yearsEmployed": 9,
+    "monthlyExpenses": 3375,
+    "savings": 69795
   }
 }

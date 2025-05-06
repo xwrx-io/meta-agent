@@ -117,6 +117,8 @@ def main():
     parser = argparse.ArgumentParser(description="Credit Card Rule Discovery System")
     parser.add_argument('--from-scratch', action='store_true', 
                         help='Start with a ruleset generated from scratch instead of using the default')
+    parser.add_argument('--max-iterations', type=int, default=10,
+                        help='Maximum number of iterations to run (default: 10)')
     args = parser.parse_args()
     
     # Load environment variables
@@ -159,10 +161,10 @@ def main():
     best_accuracy = 0
     best_ruleset = initial_ruleset
     best_iteration = 0
-    max_iterations = 10
+    max_iterations = args.max_iterations  # Use the value from command line
     iteration = 0
     
-    print("\nStarting rule discovery process...\n")
+    print(f"\nStarting rule discovery process (max {max_iterations} iterations)...\n")
     
     # Main iteration loop
     while current_accuracy < 100 and iteration < max_iterations:

@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 7436",
-    "age": 66,
-    "address": "834 Main St",
-    "phoneNumber": "555-5842",
-    "yearsAtAddress": 17
+    "name": "Applicant 6786",
+    "age": 69,
+    "address": "352 Main St",
+    "phoneNumber": "555-5773",
+    "yearsAtAddress": 3
   },
   "creditHistory": {
-    "creditScore": 526,
-    "creditTier": "Very Poor",
-    "paymentHistory": "Fair",
-    "creditUtilization": 77,
-    "creditAgeYears": 10,
-    "recentInquiries": 0
+    "creditScore": 697,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 67,
+    "creditAgeYears": 15,
+    "recentInquiries": 8
   },
   "financialInformation": {
-    "annualIncome": 62019,
-    "monthlyIncome": 5168,
+    "annualIncome": 66204,
+    "monthlyIncome": 5517,
     "incomeTier": "Medium",
-    "existingDebt": 22981,
-    "debtRatio": 0.3705588854305877,
-    "debtTier": "Medium",
+    "existingDebt": 12860,
+    "debtRatio": 0.1942548219016088,
+    "debtTier": "Very Low",
     "employmentStatus": "Employed",
-    "yearsEmployed": 3,
-    "monthlyExpenses": 1590,
-    "savings": 56231
+    "yearsEmployed": 6,
+    "monthlyExpenses": 1159,
+    "savings": 20128
   }
 }

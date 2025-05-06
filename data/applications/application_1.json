@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 3455",
-    "age": 26,
-    "address": "134 Main St",
-    "phoneNumber": "555-3247",
-    "yearsAtAddress": 14
+    "name": "Applicant 5925",
+    "age": 52,
+    "address": "425 Main St",
+    "phoneNumber": "555-8002",
+    "yearsAtAddress": 13
   },
   "creditHistory": {
-    "creditScore": 587,
-    "creditTier": "Very Poor",
+    "creditScore": 677,
+    "creditTier": "Good",
     "paymentHistory": "Excellent",
-    "creditUtilization": 23,
-    "creditAgeYears": 16,
-    "recentInquiries": 4
+    "creditUtilization": 44,
+    "creditAgeYears": 15,
+    "recentInquiries": 10
   },
   "financialInformation": {
-    "annualIncome": 20832,
-    "monthlyIncome": 1736,
-    "incomeTier": "Low",
-    "existingDebt": 2189,
-    "debtRatio": 0.10508839018888409,
-    "debtTier": "Very Low",
-    "employmentStatus": "Unemployed",
-    "yearsEmployed": 2,
-    "monthlyExpenses": 3868,
-    "savings": 11632
+    "annualIncome": 71347,
+    "monthlyIncome": 5945,
+    "incomeTier": "Medium",
+    "existingDebt": 21885,
+    "debtRatio": 0.30674466904077335,
+    "debtTier": "Medium",
+    "employmentStatus": "Self-employed",
+    "yearsEmployed": 6,
+    "monthlyExpenses": 1466,
+    "savings": 74103
   }
 }

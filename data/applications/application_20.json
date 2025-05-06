@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 2801",
-    "age": 31,
-    "address": "693 Main St",
-    "phoneNumber": "555-9822",
-    "yearsAtAddress": 6
+    "name": "Applicant 5870",
+    "age": 35,
+    "address": "368 Main St",
+    "phoneNumber": "555-9777",
+    "yearsAtAddress": 15
   },
   "creditHistory": {
-    "creditScore": 692,
-    "creditTier": "Good",
+    "creditScore": 823,
+    "creditTier": "Excellent",
     "paymentHistory": "Good",
-    "creditUtilization": 46,
-    "creditAgeYears": 21,
-    "recentInquiries": 2
+    "creditUtilization": 77,
+    "creditAgeYears": 6,
+    "recentInquiries": 10
   },
   "financialInformation": {
-    "annualIncome": 32671,
-    "monthlyIncome": 2722,
-    "incomeTier": "Low",
-    "existingDebt": 11428,
-    "debtRatio": 0.349796454111351,
+    "annualIncome": 114872,
+    "monthlyIncome": 9572,
+    "incomeTier": "Very High",
+    "existingDebt": 43794,
+    "debtRatio": 0.38124508510047816,
     "debtTier": "Medium",
-    "employmentStatus": "Part-time",
-    "yearsEmployed": 10,
-    "monthlyExpenses": 1471,
-    "savings": 30379
+    "employmentStatus": "Employed",
+    "yearsEmployed": 2,
+    "monthlyExpenses": 1358,
+    "savings": 75382
   }
 }
