@@ -14,6 +14,7 @@ from meta_agent_system.utils.visualization_helper import generate_accuracy_visua
 import matplotlib.pyplot as plt
 from datetime import datetime
 from meta_agent_system.experts.misclassification_analyzer import analyze_misclassifications
+from meta_agent_system.core.summary_generator import generate_summary
 
 # Configure logging
 logger = get_logger(__name__)
@@ -140,7 +141,7 @@ def main():
               f"with '{ruleset.get('logic', 'all')}' logic and {nested_rule_count} nested rule groups.")
     
     # Summarize results
-    print("\n=== Rule Discovery Summary ===")
+    print("\n=== Rule Discovery Complete ===")
     print(f"Iterations completed: {iteration}")
     print(f"Final accuracy: {current_accuracy:.2f}%")
     print(f"Best accuracy: {best_accuracy:.2f}% (iteration {best_iteration})")
@@ -156,14 +157,20 @@ def main():
             json.dump(best_ruleset, f, indent=2)
         print(f"Restored best ruleset from iteration {best_iteration}")
     
-    # Print final ruleset
-    print("\nFinal Credit Card Approval Rules:")
     final_ruleset = best_ruleset if best_accuracy > current_accuracy else ruleset
-    print(f"Logic: {final_ruleset.get('logic', 'all').upper()}")
-    print(f"Rule count: {len(final_ruleset.get('rules', []))}")
-    print_rules(final_ruleset.get("rules", []))
-    print("\nRuleset rationale:")
-    print(final_ruleset.get("description", "No description provided"))
+    
+    # Generate comprehensive summary report with ASCII chart
+    print("\nGenerating comprehensive summary report...")
+    summary_file = generate_summary(
+        openai_client,
+        best_accuracy, 
+        best_iteration, 
+        current_accuracy, 
+        iteration, 
+        final_ruleset
+    )
+    print(f"\nDetailed summary report saved to: {summary_file}")
+    
     print("\nRule discovery process complete!")
 
 def print_rules(rules, indent=0):

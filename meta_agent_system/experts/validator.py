@@ -334,7 +334,7 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
                     validation_history = json.load(f)
             except Exception:
                 pass
-        
+
         validation_history.append({
             "timestamp": timestamp,
             "iteration": iteration,
@@ -344,7 +344,7 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
         
         with open(history_file, 'w') as f:
             json.dump(validation_history, f, indent=2)
-    
+
     def update_persistent_misclassifications(evaluations, iteration):
         """Track persistently misclassified applications."""
         file_path = os.path.join(RESULTS_DIR, "persistent_misclassifications.json")
