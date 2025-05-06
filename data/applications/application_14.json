@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 8852",
-    "age": 59,
-    "address": "600 Main St",
-    "phoneNumber": "555-6691",
-    "yearsAtAddress": 18
+    "name": "Applicant 1062",
+    "age": 23,
+    "address": "518 Main St",
+    "phoneNumber": "555-6700",
+    "yearsAtAddress": 12
   },
   "creditHistory": {
-    "creditScore": 715,
-    "creditTier": "Very Good",
-    "paymentHistory": "Poor",
-    "creditUtilization": 89,
-    "creditAgeYears": 22,
-    "recentInquiries": 9
+    "creditScore": 585,
+    "creditTier": "Very Poor",
+    "paymentHistory": "Fair",
+    "creditUtilization": 79,
+    "creditAgeYears": 15,
+    "recentInquiries": 10
   },
   "financialInformation": {
-    "annualIncome": 94548,
-    "monthlyIncome": 7879,
-    "incomeTier": "High",
-    "existingDebt": 57701,
-    "debtRatio": 0.610284213545381,
+    "annualIncome": 55771,
+    "monthlyIncome": 4647,
+    "incomeTier": "Medium",
+    "existingDebt": 34729,
+    "debtRatio": 0.6227092239745095,
     "debtTier": "High",
-    "employmentStatus": "Unemployed",
-    "yearsEmployed": 13,
-    "monthlyExpenses": 4698,
-    "savings": 47343
+    "employmentStatus": "Self-employed",
+    "yearsEmployed": 3,
+    "monthlyExpenses": 2009,
+    "savings": 26223
   }
 }

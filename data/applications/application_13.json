@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 7352",
-    "age": 75,
-    "address": "202 Main St",
-    "phoneNumber": "555-8863",
-    "yearsAtAddress": 13
+    "name": "Applicant 7666",
+    "age": 29,
+    "address": "127 Main St",
+    "phoneNumber": "555-9159",
+    "yearsAtAddress": 4
   },
   "creditHistory": {
-    "creditScore": 700,
+    "creditScore": 717,
     "creditTier": "Good",
     "paymentHistory": "Good",
-    "creditUtilization": 78,
-    "creditAgeYears": 16,
-    "recentInquiries": 3
+    "creditUtilization": 53,
+    "creditAgeYears": 1,
+    "recentInquiries": 6
   },
   "financialInformation": {
-    "annualIncome": 61158,
-    "monthlyIncome": 5096,
+    "annualIncome": 53179,
+    "monthlyIncome": 4431,
     "incomeTier": "Medium",
-    "existingDebt": 43950,
-    "debtRatio": 0.7186312445188959,
-    "debtTier": "High",
+    "existingDebt": 7284,
+    "debtRatio": 0.1369773188749046,
+    "debtTier": "Very Low",
     "employmentStatus": "Employed",
-    "yearsEmployed": 9,
-    "monthlyExpenses": 2841,
-    "savings": 64173
+    "yearsEmployed": 4,
+    "monthlyExpenses": 2041,
+    "savings": 61654
   }
 }

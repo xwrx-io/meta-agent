@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 3461",
-    "age": 58,
-    "address": "234 Main St",
-    "phoneNumber": "555-4788",
-    "yearsAtAddress": 19
+    "name": "Applicant 9392",
+    "age": 63,
+    "address": "155 Main St",
+    "phoneNumber": "555-3751",
+    "yearsAtAddress": 1
   },
   "creditHistory": {
-    "creditScore": 710,
+    "creditScore": 695,
     "creditTier": "Good",
     "paymentHistory": "Good",
-    "creditUtilization": 18,
-    "creditAgeYears": 17,
+    "creditUtilization": 42,
+    "creditAgeYears": 21,
     "recentInquiries": 6
   },
   "financialInformation": {
-    "annualIncome": 155898,
-    "monthlyIncome": 12991,
-    "incomeTier": "Very High",
-    "existingDebt": 83901,
-    "debtRatio": 0.5381841572012115,
-    "debtTier": "Medium",
+    "annualIncome": 66320,
+    "monthlyIncome": 5526,
+    "incomeTier": "Medium",
+    "existingDebt": 49333,
+    "debtRatio": 0.7438731242014769,
+    "debtTier": "High",
     "employmentStatus": "Employed",
-    "yearsEmployed": 12,
-    "monthlyExpenses": 2834,
-    "savings": 30808
+    "yearsEmployed": 5,
+    "monthlyExpenses": 4813,
+    "savings": 71326
   }
 }

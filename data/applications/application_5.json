@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 8293",
-    "age": 33,
-    "address": "193 Main St",
-    "phoneNumber": "555-3398",
-    "yearsAtAddress": 3
+    "name": "Applicant 1973",
+    "age": 50,
+    "address": "457 Main St",
+    "phoneNumber": "555-5007",
+    "yearsAtAddress": 11
   },
   "creditHistory": {
-    "creditScore": 696,
+    "creditScore": 701,
     "creditTier": "Good",
     "paymentHistory": "Good",
-    "creditUtilization": 39,
-    "creditAgeYears": 25,
-    "recentInquiries": 4
+    "creditUtilization": 76,
+    "creditAgeYears": 8,
+    "recentInquiries": 3
   },
   "financialInformation": {
-    "annualIncome": 102418,
-    "monthlyIncome": 8534,
-    "incomeTier": "Very High",
-    "existingDebt": 34621,
-    "debtRatio": 0.33804592903875275,
-    "debtTier": "Medium",
+    "annualIncome": 69919,
+    "monthlyIncome": 5826,
+    "incomeTier": "Medium",
+    "existingDebt": 54375,
+    "debtRatio": 0.7776892936045453,
+    "debtTier": "High",
     "employmentStatus": "Employed",
-    "yearsEmployed": 8,
-    "monthlyExpenses": 1948,
-    "savings": 76866
+    "yearsEmployed": 10,
+    "monthlyExpenses": 3239,
+    "savings": 22175
   }
 }

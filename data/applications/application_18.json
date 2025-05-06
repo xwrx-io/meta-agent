@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 1222",
-    "age": 50,
-    "address": "502 Main St",
-    "phoneNumber": "555-3330",
-    "yearsAtAddress": 11
+    "name": "Applicant 1107",
+    "age": 60,
+    "address": "814 Main St",
+    "phoneNumber": "555-5622",
+    "yearsAtAddress": 15
   },
   "creditHistory": {
-    "creditScore": 700,
+    "creditScore": 686,
     "creditTier": "Good",
     "paymentHistory": "Good",
-    "creditUtilization": 89,
-    "creditAgeYears": 2,
-    "recentInquiries": 8
+    "creditUtilization": 19,
+    "creditAgeYears": 5,
+    "recentInquiries": 7
   },
   "financialInformation": {
-    "annualIncome": 23542,
-    "monthlyIncome": 1961,
+    "annualIncome": 21768,
+    "monthlyIncome": 1814,
     "incomeTier": "Low",
-    "existingDebt": 7862,
-    "debtRatio": 0.3339808265444923,
+    "existingDebt": 7092,
+    "debtRatio": 0.32583637600368187,
     "debtTier": "Medium",
     "employmentStatus": "Part-time",
-    "yearsEmployed": 4,
-    "monthlyExpenses": 2403,
-    "savings": 10778
+    "yearsEmployed": 6,
+    "monthlyExpenses": 3301,
+    "savings": 10925
   }
 }

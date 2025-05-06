@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 1299",
-    "age": 32,
-    "address": "424 Main St",
-    "phoneNumber": "555-3793",
-    "yearsAtAddress": 4
+    "name": "Applicant 9309",
+    "age": 75,
+    "address": "760 Main St",
+    "phoneNumber": "555-3914",
+    "yearsAtAddress": 16
   },
   "creditHistory": {
-    "creditScore": 743,
-    "creditTier": "Very Good",
-    "paymentHistory": "Excellent",
-    "creditUtilization": 62,
-    "creditAgeYears": 12,
-    "recentInquiries": 2
+    "creditScore": 707,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 39,
+    "creditAgeYears": 15,
+    "recentInquiries": 5
   },
   "financialInformation": {
-    "annualIncome": 91103,
-    "monthlyIncome": 7591,
-    "incomeTier": "High",
-    "existingDebt": 24928,
-    "debtRatio": 0.27363395688501,
-    "debtTier": "Low",
+    "annualIncome": 65387,
+    "monthlyIncome": 5448,
+    "incomeTier": "Medium",
+    "existingDebt": 9251,
+    "debtRatio": 0.14148811351691434,
+    "debtTier": "Very Low",
     "employmentStatus": "Employed",
-    "yearsEmployed": 12,
-    "monthlyExpenses": 4380,
-    "savings": 61670
+    "yearsEmployed": 10,
+    "monthlyExpenses": 2174,
+    "savings": 24885
   }
 }

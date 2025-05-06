@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 9020",
-    "age": 44,
-    "address": "740 Main St",
-    "phoneNumber": "555-3824",
-    "yearsAtAddress": 18
+    "name": "Applicant 9066",
+    "age": 61,
+    "address": "676 Main St",
+    "phoneNumber": "555-6533",
+    "yearsAtAddress": 7
   },
   "creditHistory": {
-    "creditScore": 762,
+    "creditScore": 760,
     "creditTier": "Very Good",
-    "paymentHistory": "Fair",
-    "creditUtilization": 20,
-    "creditAgeYears": 1,
-    "recentInquiries": 3
+    "paymentHistory": "Poor",
+    "creditUtilization": 36,
+    "creditAgeYears": 17,
+    "recentInquiries": 9
   },
   "financialInformation": {
-    "annualIncome": 96910,
-    "monthlyIncome": 8075,
-    "incomeTier": "High",
-    "existingDebt": 24742,
-    "debtRatio": 0.2553191369154817,
-    "debtTier": "Low",
-    "employmentStatus": "Part-time",
-    "yearsEmployed": 13,
-    "monthlyExpenses": 3379,
-    "savings": 88068
+    "annualIncome": 27374,
+    "monthlyIncome": 2281,
+    "incomeTier": "Low",
+    "existingDebt": 17027,
+    "debtRatio": 0.6220422322874096,
+    "debtTier": "High",
+    "employmentStatus": "Employed",
+    "yearsEmployed": 1,
+    "monthlyExpenses": 1214,
+    "savings": 20100
   }
 }

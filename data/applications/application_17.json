@@ -1,29 +1,29 @@
 {
   "personalDetails": {
-    "name": "Applicant 4300",
-    "age": 71,
-    "address": "898 Main St",
-    "phoneNumber": "555-1496",
-    "yearsAtAddress": 14
+    "name": "Applicant 6574",
+    "age": 72,
+    "address": "787 Main St",
+    "phoneNumber": "555-6414",
+    "yearsAtAddress": 17
   },
   "creditHistory": {
-    "creditScore": 699,
+    "creditScore": 660,
     "creditTier": "Good",
-    "paymentHistory": "Good",
-    "creditUtilization": 62,
-    "creditAgeYears": 8,
-    "recentInquiries": 0
+    "paymentHistory": "Excellent",
+    "creditUtilization": 43,
+    "creditAgeYears": 20,
+    "recentInquiries": 10
   },
   "financialInformation": {
-    "annualIncome": 67503,
-    "monthlyIncome": 5625,
+    "annualIncome": 66071,
+    "monthlyIncome": 5505,
     "incomeTier": "Medium",
-    "existingDebt": 13321,
-    "debtRatio": 0.19734357986905945,
-    "debtTier": "Very Low",
-    "employmentStatus": "Employed",
-    "yearsEmployed": 14,
-    "monthlyExpenses": 3376,
-    "savings": 20476
+    "existingDebt": 26123,
+    "debtRatio": 0.3953855988549061,
+    "debtTier": "Medium",
+    "employmentStatus": "Self-employed",
+    "yearsEmployed": 5,
+    "monthlyExpenses": 4466,
+    "savings": 29158
   }
 }

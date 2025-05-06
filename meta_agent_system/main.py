@@ -12,6 +12,7 @@ from meta_agent_system.experts.validator import create_validator
 from meta_agent_system.experts.rule_analyzer import create_rule_analyzer
 from meta_agent_system.experts.rule_refiner import create_rule_refiner
 from meta_agent_system.utils.visualization_helper import generate_accuracy_visualization
+from meta_agent_system.experts.expertise_recommender import create_expertise_recommender
 import matplotlib.pyplot as plt
 from datetime import datetime
 from meta_agent_system.experts.misclassification_analyzer import analyze_misclassifications
@@ -139,11 +140,12 @@ def main():
     validator = create_validator(openai_client)
     rule_analyzer = create_rule_analyzer(openai_client)
     rule_refiner = create_rule_refiner(openai_client)
+    expertise_recommender = create_expertise_recommender(openai_client)  # Create expertise recommender
     
     # Ensure results directory exists
     os.makedirs(RESULTS_DIR, exist_ok=True)
     
-    # Get initial ruleset based on command line flag
+    # Initial ruleset (default or from scratch)
     if args.from_scratch:
         initial_ruleset = get_initial_ruleset_from_scratch(openai_client)
         print("Starting with LLM-generated ruleset")
@@ -161,7 +163,7 @@ def main():
     best_accuracy = 0
     best_ruleset = initial_ruleset
     best_iteration = 0
-    max_iterations = args.max_iterations  # Use the value from command line
+    max_iterations = args.max_iterations
     iteration = 0
     
     print(f"\nStarting rule discovery process (max {max_iterations} iterations)...\n")
@@ -195,6 +197,77 @@ def main():
                 json.dump(best_ruleset, f, indent=2)
                 
             print(f"New best accuracy: {best_accuracy:.2f}%")
+        
+        # Run expertise recommender ONLY after first iteration
+        if iteration == 1:
+            print("\n=== Expertise Recommendations ===")
+            print("Analyzing expertise needs based on first iteration results...")
+            
+            # Call expertise recommender with validation results
+            expertise_result = expertise_recommender.execute({
+                "description": "Identify needed expertise based on validation results",
+                "data": {
+                    "validation_result": validation_result,
+                    "iteration": iteration,
+                    "current_accuracy": current_accuracy
+                }
+            })
+            
+            # Print recommendations to terminal
+            if expertise_result.get("status") == "success":
+                recommendations = expertise_result.get("recommendations", [])
+                recommendations_file = expertise_result.get("recommendations_file", "")
+                
+                print(f"\nIdentified {len(recommendations)} potential expert types that could help:\n")
+                print("=" * 80)
+                
+                for i, expert in enumerate(recommendations, 1):
+                    expert_name = expert.get('name', 'Unnamed Expert')
+                    capabilities = expert.get('capabilities', [])
+                    system_prompt = expert.get('system_prompt', 'No system prompt provided')
+                    
+                    # Format with clear visual separation and structure
+                    print(f"\n{'-' * 80}")
+                    print(f"EXPERT {i}: {expert_name}")
+                    print(f"{'-' * 80}")
+                    
+                    # Format capabilities as a bulleted list
+                    print("\nCAPABILITIES:")
+                    for capability in capabilities:
+                        print(f"  • {capability}")
+                    
+                    # Format system prompt with proper indentation
+                    print("\nSYSTEM PROMPT:")
+                    # Wrap and indent the system prompt for better readability
+                    wrapped_prompt = ""
+                    for line in system_prompt.split('\n'):
+                        line = line.strip()
+                        if line:
+                            # Indent wrapped lines
+                            words = line.split()
+                            current_line = "  "
+                            for word in words:
+                                if len(current_line) + len(word) + 1 > 78:  # +1 for space
+                                    wrapped_prompt += current_line + "\n"
+                                    current_line = "  " + word
+                                else:
+                                    if current_line == "  ":
+                                        current_line += word
+                                    else:
+                                        current_line += " " + word
+                            if current_line:
+                                wrapped_prompt += current_line + "\n"
+                        else:
+                            wrapped_prompt += "\n"
+                    print(wrapped_prompt)
+                
+                print(f"\n{'-' * 80}")
+                print(f"\nDetailed expertise recommendations saved to: {recommendations_file}")
+                print("=" * 80)
+            else:
+                print(f"Failed to generate expertise recommendations: {expertise_result.get('message', 'Unknown error')}")
+            
+            print("\nContinuing with rule discovery process...\n")
         
         # If we've reached 100% accuracy, break the loop
         if current_accuracy == 100:
