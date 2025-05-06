@@ -74,7 +74,7 @@ echo "OPENAI_API_KEY=your-api-key-here" > .env
 ```bash
 python data_generation.py
 ```
-This creates 20 credit card applications with clear approval patterns.
+This creates 50 credit card applications with clear approval patterns.
 
 2. Run the rule discovery system:
 ```bash
