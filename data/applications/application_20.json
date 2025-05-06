@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Chris",
-    "lastName": "Davis",
-    "dateOfBirth": "1983-07-19",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 25000,
-    "employmentStatus": "Freelancer",
-    "existingDebt": 22000
+  "personalDetails": {
+    "name": "Applicant 4478",
+    "age": 37,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 590,
-    "paymentHistory": "Bankruptcy"
+    "creditScore": 509,
+    "creditTier": "Very Poor",
+    "paymentHistory": "Poor",
+    "creditUtilization": 21
   },
-  "requestedCreditDetails": {
-    "cardType": "Business",
-    "creditLimit": 8000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 126750,
+    "incomeTier": "Very High",
+    "existingDebt": 16424,
+    "debtRatio": 0.12958172610063184,
+    "debtTier": "Very Low",
+    "employmentStatus": "Employed",
+    "monthlyExpenses": 3649
   }
 }

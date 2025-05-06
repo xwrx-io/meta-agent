@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Michael",
-    "lastName": "Johnson",
-    "dateOfBirth": "1995-11-11",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 18000,
-    "employmentStatus": "Temporary",
-    "existingDebt": 5000
+  "personalDetails": {
+    "name": "Applicant 4852",
+    "age": 52,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 610,
-    "paymentHistory": "Late payments"
+    "creditScore": 813,
+    "creditTier": "Excellent",
+    "paymentHistory": "Good",
+    "creditUtilization": 90
   },
-  "requestedCreditDetails": {
-    "cardType": "Gold",
-    "creditLimit": 7000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 22612,
+    "incomeTier": "Low",
+    "existingDebt": 5599,
+    "debtRatio": 0.24762556207557546,
+    "debtTier": "Low",
+    "employmentStatus": "Self-employed",
+    "monthlyExpenses": 3247
   }
 }

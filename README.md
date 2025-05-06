@@ -1,33 +1,41 @@
-# Meta Agent System
+# Credit Card Approval Rule Discovery System
 
-A solution for solving complex problems using a meta-agent approach with dynamically created specialised expert agents.
+An AI-driven system that uses Large Language Models to discover and refine optimal credit card approval rules through iterative learning.
 
 ## Overview
 
-This system uses a meta-agent that coordinates multiple expert agents to solve complex problems. The meta-agent decomposes problems into subtasks, identifies the expertise needed for each subtask, and either assigns tasks to appropriate existing expert agents or dynamically creates new specialised agents as required.
+This system demonstrates how LLMs can learn domain-specific rules by analyzing patterns in data. It focuses on discovering the rules that determine credit card application approvals and rejections, improving iteratively until it achieves high accuracy.
 
-## Key Features
+## Key Insights and Learnings
 
-- **Task Decomposition**: Breaks complex problems into manageable subtasks
-- **Dynamic Expert Creation**: Creates specialised expert agents on demand based on required expertise
-- **Feedback Loop**: Implements an iterative improvement cycle with validation and refinement
-- **Success Criteria**: Automatically determines when a solution is satisfactory
-- **Expertise Recommendation**: Identifies when new types of expertise might improve results
-- **Enhanced Metrics & Visualization**: Generates comprehensive run summaries with accuracy metrics and visualizations
-- **Complete System Prompts**: Shows the full system prompts used for new expert agents
-- **Dynamic Testing & Validation**: Tracks rule evolution and improvements over iterations
+### Data Quality Over Quantity
+- **Clear Patterns**: Systems learn better from fewer examples with obvious patterns
+- **Category Distinction**: Clear separation between approval/rejection categories is crucial
+- **Simplified Factors**: Focus on high-level tier classifications rather than raw numbers
 
-## Example Problem: Credit Card Approval Rules Discovery
+### Effective LLM Teaching Techniques
+- **Example-Based Learning**: LLMs learn better from concrete examples than abstract descriptions
+- **Explicit Feedback**: Showing both correct classifications and mistakes with explanations
+- **Guided Discovery**: Direct attention to the most important patterns and edge cases
 
-The system can discover the ruleset used for approving or declining credit card applications by analysing sample applications without prior knowledge of which ones were approved or declined.
+### System Architecture Principles
+- **Focused Prompts**: Clear, specific instructions perform better than open-ended ones
+- **Incremental Complexity**: Start simple and gradually introduce more complex patterns
+- **Feedback Loops**: Store and utilize previous results to avoid regression
 
-The process works as follows:
-1. Create a JSON schema for credit card applications
-2. Generate sample applications (10 approved, 10 declined)
-3. Analyse applications to identify patterns
-4. Extract rules that determine approval or rejection
-5. Validate rules against all applications
-6. Refine rules iteratively until 100% accuracy is achieved
+### LLM Capabilities and Limitations
+- **Pattern Recognition**: LLMs excel at identifying patterns when properly guided
+- **Structured Learning**: They require well-structured examples and constraints
+- **Reasoning Support**: Provide context and rationale rather than expecting independent discovery
+
+## Components
+
+The system consists of these specialized experts:
+
+1. **Validator**: Tests rules against applications and measures accuracy
+2. **Rule Analyzer**: Examines applications to identify distinguishing patterns
+3. **Rule Refiner**: Creates improved rules based on analysis and validation feedback
+4. **Misclassification Analyzer**: Investigates edge cases and persistent errors
 
 ## Getting Started
 
@@ -50,12 +58,7 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install the package using setup.py (recommended):
-```bash
-pip install -e .
-```
-
-   Alternatively, you can install from requirements.txt:
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
@@ -67,110 +70,118 @@ echo "OPENAI_API_KEY=your-api-key-here" > .env
 
 ### Running the System
 
-To run the meta agent on the credit card rules discovery problem:
+1. Generate application data:
+```bash
+python data_generation.py
+```
+This creates 20 credit card applications with clear approval patterns.
 
+2. Run the rule discovery system:
 ```bash
 python meta_agent_system/main.py
 ```
+The system will process through multiple iterations, each refining the ruleset to improve accuracy.
 
-The system will generate a comprehensive summary at the end of the run, including:
-- List of expert agents used (both initial and dynamically created)
-- Complete system prompts for new expert agents
-- Credit card application test results and validation statistics
-- Evolution of rules from initial to final versions
-- Visualization of accuracy improvements across iterations
-- Runtime metrics and resource usage
+3. View results:
+Results and visualizations are saved to the `data/results/` directory, including:
+- Final ruleset in `credit_card_approval_rules.json`
+- Validation metrics in `validation_history.json`
+- Accuracy visualization in `accuracy_improvement_[timestamp].png`
 
-Results and visualizations are saved to the `data/results/` directory.
+## Customization
 
-### Testing
+### Modifying Application Generation
 
-Run the end-to-end test:
+To change how applications are generated:
+1. Edit `data_generation.py`
+2. Adjust the approval criteria in the `should_approve()` function
+3. Run `python data_generation.py` to generate new applications
 
-```bash
-python meta_agent_system/tests/test_end_to_end.py
+### Tuning the Learning Process
+
+To optimize the learning process:
+1. Adjust LLM prompts in `meta_agent_system/experts/rule_refiner.py`
+2. Change the application number in `data_generation.py` (20-30 recommended)
+3. Modify the maximum iterations in `meta_agent_system/main.py`
+
+## How It Works
+
+### Rule Discovery Process
+
+```mermaid
+graph TD
+    A[Generate Applications] --> B[Initial Ruleset]
+    B --> C[Validate Ruleset]
+    C --> D[Analyze Misclassifications]
+    D --> E[Refine Rules]
+    E --> C
+    C -->|Accuracy 100%| F[Final Ruleset]
+```
+
+1. **Application Generation**: Creates credit applications with various attributes
+2. **Initial Ruleset**: Starts with simple rules based on common factors
+3. **Validation**: Tests rules against applications and measures accuracy
+4. **Pattern Analysis**: Examines approved, declined, and misclassified applications
+5. **Rule Refinement**: Creates improved rules based on observed patterns
+6. **Iteration**: Continues until reaching high accuracy or maximum iterations
+
+### Effective Rule Structure
+
+Rules follow a nested logical structure:
+```json
+{
+  "logic": "any",  // Top level combines rules with OR logic
+  "rules": [
+    {
+      "field": "creditHistory.creditTier",
+      "condition": "equals",
+      "threshold": "Excellent"
+    },
+    {
+      "logic": "all",  // Nested group combines with AND logic
+      "rules": [
+        {
+          "field": "financialInformation.incomeTier",
+          "condition": "in",
+          "values": ["High", "Very High"]
+        },
+        {
+          "field": "financialInformation.debtTier",
+          "condition": "equals",
+          "threshold": "Low"
+        }
+      ]
+    }
+  ]
+}
 ```
 
 ## Project Structure
 
-- `config/`: Configuration settings
-- `core/`: Core components (meta-agent, tasks, experts)
-- `data/`: Data storage (schemas, applications, results)
-- `experts/`: Expert agent implementations
-- `llm/`: LLM integration
-- `utils/`: Utility functions
-- `tests/`: Test scripts
+- `meta_agent_system/`: Core system code
+  - `main.py`: Entry point of the application
+  - `experts/`: Expert modules (validator, analyzer, refiner)
+  - `llm/`: LLM integration
+  - `utils/`: Helper utilities
+- `data/`: Data storage
+  - `applications/`: Generated credit card applications
+  - `results/`: Output files and visualizations
+- `data_generation.py`: Creates sample credit card applications
 
-## How It Works
+## Best Practices for LLM-Driven Rule Learning
 
-### Meta Agent Architecture
-
-The meta agent uses a priority queue to manage tasks and delegates them to specialised expert agents. When expertise is needed that no current agent possesses, the meta agent can dynamically create new expert agents with appropriate system prompts.
-
-```mermaid
-graph TD
-    Problem[Problem Definition] --> MetaAgent[Meta Agent]
-    MetaAgent --> TaskDecomposer[Task Decomposer]
-    TaskDecomposer --> Tasks[Subtasks]
-    Tasks --> ExpertiseIdentification[Expertise Identification]
-    
-    ExpertiseIdentification --> ExistingExpert{Existing Expert?}
-    ExistingExpert -->|Yes| AssignExpert[Assign to Expert]
-    ExistingExpert -->|No| CreateExpert[Create New Expert]
-    
-    CreateExpert --> ExpertFactory[Expert Factory]
-    ExpertFactory --> NewExpert[New Specialised Expert]
-    NewExpert --> RegisterExpert[Register Expert]
-    RegisterExpert --> AssignExpert
-    
-    AssignExpert --> TaskExecution[Execute Task]
-    TaskExecution --> ResultsAnalysis[Analyse Results]
-    
-    ResultsAnalysis --> SuccessCriteria{Success Criteria Met?}
-    SuccessCriteria -->|No| ExpertiseRecommender[Expertise Recommender]
-    ExpertiseRecommender --> FeedbackLoop[Feedback Loop]
-    FeedbackLoop --> RuleRefiner[Rule Refiner]
-    RuleRefiner --> Validator[Validator]
-    Validator --> ResultsAnalysis
-    
-    SuccessCriteria -->|Yes| FinalSolution[Final Solution]
-    
-    classDef core fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef expert fill:#bbf,stroke:#333,stroke-width:1px;
-    classDef process fill:#dfd,stroke:#333,stroke-width:1px;
-    classDef decision fill:#ffd,stroke:#333,stroke-width:1px;
-    
-    class MetaAgent,ExpertFactory core;
-    class TaskDecomposer,NewExpert,ExpertiseRecommender,RuleRefiner,Validator expert;
-    class Problem,Tasks,AssignExpert,TaskExecution,ResultsAnalysis,FeedbackLoop,FinalSolution process;
-    class ExistingExpert,SuccessCriteria decision;
-```
-
-### Feedback Loop
-
-The system implements a feedback loop for iterative improvement:
-1. Extract rules based on data analysis
-2. Validate rules against all applications
-3. If success criteria aren't met, refine the rules
-4. Repeat until success criteria are satisfied
-
-### Expert Types
-
-1. **Task Decomposer**: Breaks problems into subtasks and identifies required expertise
-2. **Schema Designer**: Creates data schemas
-3. **Data Generator**: Generates sample data
-4. **Data Analyser**: Analyses patterns in data
-5. **Rule Extractor**: Formulates rules from patterns
-6. **Rule Refiner**: Improves rules based on validation feedback
-7. **Validator**: Tests rules against criteria
-8. **Expertise Recommender**: Suggests new expertise that might improve results
+1. **Clear Examples**: Provide concrete examples of both correct and incorrect classifications
+2. **Structured Data**: Use categorical data (tiers) when possible
+3. **Focused Feedback**: Emphasize edge cases that are being misclassified
+4. **Simple Logic**: Start with simple logical structures and gradually increase complexity
+5. **Iterative Learning**: Allow multiple refinement cycles with clear performance metrics
 
 ## Extending the System
 
-You can extend the system by:
-1. Creating new expert agents in the `experts/` directory
-2. Updating the success criteria for different problem types
-3. Adding new problem definitions
+You can extend this approach to other domains by:
+1. Creating domain-specific data generators
+2. Adjusting the rule format to match domain requirements
+3. Customizing the validator for domain-specific success criteria
 
 ## License
 

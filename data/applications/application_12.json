@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Emily",
-    "lastName": "Smith",
-    "dateOfBirth": "1985-11-23",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 30000,
-    "employmentStatus": "Unemployed",
-    "existingDebt": 20000
+  "personalDetails": {
+    "name": "Applicant 2399",
+    "age": 26,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 580,
-    "paymentHistory": "Missed payments"
+    "creditScore": 704,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 89
   },
-  "requestedCreditDetails": {
-    "cardType": "Gold",
-    "creditLimit": 5000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 52032,
+    "incomeTier": "Medium",
+    "existingDebt": 39822,
+    "debtRatio": 0.7653508729323405,
+    "debtTier": "High",
+    "employmentStatus": "Employed",
+    "monthlyExpenses": 1851
   }
 }

@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Maria",
-    "lastName": "Gonzalez",
-    "dateOfBirth": "1978-08-22",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 120000,
-    "employmentStatus": "Self-employed",
-    "existingDebt": 2000
+  "personalDetails": {
+    "name": "Applicant 8670",
+    "age": 30,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 750,
-    "paymentHistory": "Very Good"
+    "creditScore": 549,
+    "creditTier": "Very Poor",
+    "paymentHistory": "Fair",
+    "creditUtilization": 16
   },
-  "requestedCreditDetails": {
-    "cardType": "Gold",
-    "creditLimit": 20000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 57158,
+    "incomeTier": "Medium",
+    "existingDebt": 18578,
+    "debtRatio": 0.32503010545396216,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "monthlyExpenses": 2054
   }
 }

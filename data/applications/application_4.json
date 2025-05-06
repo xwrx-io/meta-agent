@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Daniel",
-    "lastName": "Lee",
-    "dateOfBirth": "1982-03-21",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 105000,
-    "employmentStatus": "Employed",
-    "existingDebt": 1000
+  "personalDetails": {
+    "name": "Applicant 3073",
+    "age": 21,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 800,
-    "paymentHistory": "Excellent"
+    "creditScore": 719,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 64
   },
-  "requestedCreditDetails": {
-    "cardType": "Platinum",
-    "creditLimit": 30000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 108528,
+    "incomeTier": "Very High",
+    "existingDebt": 41047,
+    "debtRatio": 0.37822259746541337,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "monthlyExpenses": 1386
   }
 }

@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Chen",
-    "lastName": "Lee",
-    "dateOfBirth": "1988-06-30",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 90000,
-    "employmentStatus": "Full-time",
-    "existingDebt": 4000
+  "personalDetails": {
+    "name": "Applicant 8318",
+    "age": 39,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 740,
-    "paymentHistory": "Very Good"
+    "creditScore": 707,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 22
   },
-  "requestedCreditDetails": {
-    "cardType": "Gold",
-    "creditLimit": 14000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 24697,
+    "incomeTier": "Low",
+    "existingDebt": 8775,
+    "debtRatio": 0.3553419759053426,
+    "debtTier": "Medium",
+    "employmentStatus": "Part-time",
+    "monthlyExpenses": 3904
   }
 }

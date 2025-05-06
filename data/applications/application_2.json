@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Michael",
-    "lastName": "Smith",
-    "dateOfBirth": "1975-11-16",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 120000,
-    "employmentStatus": "Self-Employed",
-    "existingDebt": 2000
+  "personalDetails": {
+    "name": "Applicant 9525",
+    "age": 29,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 780,
-    "paymentHistory": "Excellent"
+    "creditScore": 791,
+    "creditTier": "Excellent",
+    "paymentHistory": "Good",
+    "creditUtilization": 16
   },
-  "requestedCreditDetails": {
-    "cardType": "Gold",
-    "creditLimit": 25000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 54416,
+    "incomeTier": "Medium",
+    "existingDebt": 18674,
+    "debtRatio": 0.34318624946470094,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "monthlyExpenses": 1693
   }
 }

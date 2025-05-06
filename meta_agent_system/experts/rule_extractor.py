@@ -1,11 +1,11 @@
 from typing import Dict, Any, List
 import json
 import os
+import re
 from meta_agent_system.core.expert_agent import ExpertAgent
 from meta_agent_system.llm.openai_client import OpenAIClient
 from meta_agent_system.utils.logger import get_logger
 from meta_agent_system.config.settings import RESULTS_DIR, APPLICATIONS_DIR
-import re
 
 logger = get_logger(__name__)
 
@@ -13,7 +13,7 @@ def create_rule_extractor(llm_client: OpenAIClient) -> ExpertAgent:
     """
     Create a rule extractor expert agent.
     
-    This expert extracts rules from data patterns and analysis.
+    This expert extracts rules from data analysis.
     
     Args:
         llm_client: OpenAI client for generating responses
@@ -22,196 +22,241 @@ def create_rule_extractor(llm_client: OpenAIClient) -> ExpertAgent:
         Expert agent for rule extraction
     """
     system_prompt = """
-You are a Rule Extraction Expert. Your job is to formulate clear, specific rules based on data analysis.
+You are a Rule Extraction Expert. Your job is to analyze data patterns and extract clear, actionable rules that explain those patterns.
 
 For credit card applications, you need to:
-1. Extract specific rules that determine approval or rejection
-2. Define clear thresholds and conditions
-3. Organize rules in a logical structure (if-then format)
-4. Ensure rules are comprehensive and cover all cases
-5. Prioritize rules by importance/impact
+1. Identify the key factors that determine approval or rejection
+2. Define specific thresholds for those factors (e.g., minimum credit score)
+3. Create rules that combine these factors effectively
+4. Avoid creating rules that memorize specific cases rather than capturing general patterns
+5. Think about both simple threshold rules and more complex combinations of factors
 
-Your rules should:
-- Be precise and testable
-- Have clear conditions and outcomes
-- Cover all possible cases
-- Be expressed in a format that can be implemented programmatically
-- Be organized in a logical hierarchy if applicable
-
-Format your rules in a structured JSON format that can be used for validation.
+Your rules should be clear, specific, and generalizable to new applications.
+Format your response as a structured set of rules that can be used to make approval decisions.
 """
     
     def rule_extraction_behavior(task: Dict[str, Any]) -> Dict[str, Any]:
-        """Behavior function for rule extraction"""
-        task_description = task.get("description", "")
-        task_data = task.get("data", {})
+        """Simplified behavior function for rule extraction"""
         context = task.get("context", {})
         
-        # Get data analysis from context if available
-        analysis = ""
-        analysis_found = False
+        # Get applications 
+        applications = get_applications_from_context_or_file(context)
+        hidden_approvals = get_hidden_approvals()
         
-        # First try to get analysis from context
-        for key, value in context.items():
-            if isinstance(value, dict) and value.get("agent_name") == "Data Analyzer":
-                if "result" in value and "analysis" in value["result"]:
-                    analysis = value["result"]["analysis"]
-                    analysis_found = True
-                    logger.info("Found analysis in context")
-                    break
+        if not applications or not hidden_approvals:
+            return {"status": "error", "message": "Missing applications or approvals"}
         
-        # If we couldn't find analysis in the context, try to load it from file
-        if not analysis_found:
-            analysis_file = os.path.join(RESULTS_DIR, "credit_card_analysis.json")
-            if os.path.exists(analysis_file):
-                try:
-                    with open(analysis_file, 'r') as f:
-                        analysis_data = json.load(f)
-                        analysis = analysis_data.get("analysis", "")
-                        if analysis:
-                            analysis_found = True
-                            logger.info(f"Loaded analysis from file: {analysis_file}")
-                except Exception as e:
-                    logger.error(f"Error loading analysis from file: {str(e)}")
-            
-            # Try text file as backup
-            if not analysis_found:
-                text_file = os.path.join(RESULTS_DIR, "credit_card_analysis.txt")
-                if os.path.exists(text_file):
-                    try:
-                        with open(text_file, 'r') as f:
-                            analysis = f.read()
-                            if analysis:
-                                analysis_found = True
-                                logger.info(f"Loaded analysis from text file: {text_file}")
-                    except Exception as e:
-                        logger.error(f"Error loading analysis from text file: {str(e)}")
+        # Prepare approved and declined applications for LLM analysis
+        approved_apps = []
+        declined_apps = []
         
-        if not analysis_found:
-            logger.error("No analysis found in context or files")
-            return {
-                "status": "error",
-                "error": "No analysis found in context or files. Data Analyzer must run first."
-            }
+        for i, app in enumerate(applications):
+            app_id = str(i + 1)  # Applications are 1-indexed
+            if app_id in hidden_approvals:
+                if hidden_approvals[app_id]:
+                    approved_apps.append(app)
+                else:
+                    declined_apps.append(app)
         
-        # Get applications if needed for context
-        applications = []
-        for key, value in context.items():
-            if isinstance(value, dict) and value.get("agent_name") == "Data Generator":
-                if "applications" in value.get("result", {}):
-                    applications = value["result"]["applications"]
-                    logger.info(f"Found {len(applications)} applications in context")
-                    break
+        # Get misclassified applications
+        misclass_file = os.path.join(RESULTS_DIR, "persistent_misclassifications.json")
+        persistent_misclassifications = {}
+        if os.path.exists(misclass_file):
+            try:
+                with open(misclass_file, 'r') as f:
+                    persistent_misclassifications = json.load(f)
+            except Exception as e:
+                logger.error(f"Error loading persistent misclassifications: {str(e)}")
         
-        # If no applications in context, try loading from files
-        if not applications:
-            if os.path.exists(APPLICATIONS_DIR):
-                application_files = [os.path.join(APPLICATIONS_DIR, f) for f in os.listdir(APPLICATIONS_DIR) 
-                                   if f.startswith("application_") and f.endswith(".json")]
-                
-                if application_files:
-                    applications = []
-                    for file_path in application_files:
-                        try:
-                            with open(file_path, 'r') as f:
-                                application = json.load(f)
-                                applications.append(application)
-                        except Exception as e:
-                            logger.error(f"Error loading application from {file_path}: {str(e)}")
-        
-        # Construct a prompt for rule extraction
+        # Create a simpler prompt focused on what worked and what didn't
         prompt = f"""
-Task Description: {task_description}
+You are a Credit Card Rule Expert. Create rules that fix the most commonly misclassified applications.
 
-Based on the analysis of credit card applications, extract clear rules that determine whether an application is approved or rejected.
+INCORRECTLY CLASSIFIED APPLICATIONS:
+{json.dumps([app for app_id, app in persistent_misclassifications.items()], indent=2)}
 
-Analysis of Applications:
-{analysis}
+IMPORTANT: 
+1. Create a ruleset with exactly 3 rules, each designed to fix specific misclassifications
+2. Each rule should be precise and focused on a specific pattern
+3. Use nested logic (AND/OR combinations) for complex patterns
 
-Please formulate specific rules with clear thresholds that can be used to classify applications. 
+CRITICAL: Use these tier-based fields for more reliable rules:
+- creditHistory.creditTier (values: Excellent, Very Good, Good, Poor, Very Poor)
+- financialInformation.incomeTier (values: Very High, High, Medium, Low)
+- financialInformation.debtTier (values: Very Low, Low, Medium, High)
 
-Your response MUST be a valid JSON object with the following structure:
+Return ONLY a JSON object in this format:
 {{
+  "logic": "any",
   "rules": [
-    {{
-      "field": "creditHistory.creditScore",
-      "condition": ">=",
-      "value": 700,
-      "importance": "high"
-    }},
-    {{
-      "field": "financialInformation.annualIncome",
-      "condition": ">=",
-      "value": 50000,
-      "importance": "medium"
-    }},
-    // More rules as needed
+    // 3 rules, each can have nested logic using tier fields
   ],
-  "logic": "all",  // Can be "all" (AND) or "any" (OR)
-  "description": "Human-readable description of the ruleset"
+  "description": "Brief explanation"
 }}
-
-Create rules that would achieve 100% accuracy on the 20 sample applications. Do not include any explanatory text or markdown formatting in your response, only the valid JSON object.
 """
         
-        # Include sample applications in the prompt if available
-        if applications:
-            prompt += "\n\nHere are a few sample applications for reference:\n"
-            sample_apps = applications[:2] + applications[10:12]  # 2 approved, 2 declined
-            prompt += json.dumps(sample_apps, indent=2)
-        
-        # Get response from LLM
+        # Get LLM's analysis and rules
         llm_response = llm_client.generate(
             prompt=prompt,
             system_message=system_prompt,
-            temperature=0.3,  # Lower temperature for more consistent JSON output
-            max_tokens=3000
+            temperature=0.1  # Low temperature for more deterministic output
         )
         
-        # Extract JSON rules from the response
+        # Extract JSON ruleset from response
         try:
-            # Clean up response
-            cleaned_response = llm_response.strip()
-            cleaned_response = re.sub(r'^```json\s*', '', cleaned_response)
-            cleaned_response = re.sub(r'^```\s*', '', cleaned_response)
-            cleaned_response = re.sub(r'\s*```$', '', cleaned_response)
-            
-            # Look for JSON object pattern
-            json_match = re.search(r'\{[\s\S]*\}', cleaned_response)
+            # Look for JSON pattern
+            import re
+            json_match = re.search(r'\{[\s\S]*\}', llm_response)
             if json_match:
                 ruleset = json.loads(json_match.group(0))
             else:
-                # If no JSON object found, try parsing the entire output
-                ruleset = json.loads(cleaned_response)
+                # Try parsing the entire response as JSON
+                ruleset = json.loads(llm_response)
             
-            # Save the ruleset to file
-            os.makedirs(RESULTS_DIR, exist_ok=True)
+            # Save the ruleset
             ruleset_file = os.path.join(RESULTS_DIR, "credit_card_approval_rules.json")
             with open(ruleset_file, 'w') as f:
                 json.dump(ruleset, f, indent=2)
-            logger.info(f"Saved ruleset to {ruleset_file}")
+            
+            logger.info(f"LLM-generated ruleset saved to {ruleset_file}")
             
             return {
                 "status": "success",
-                "result": {
                     "ruleset": ruleset,
                     "ruleset_file": ruleset_file,
-                    "message": "Extracted rules for credit card application approval"
-                }
+                "message": "Generated rules based on LLM analysis"
             }
         except Exception as e:
-            logger.error(f"Error parsing ruleset: {str(e)}")
-            logger.error(f"Raw LLM response: {llm_response}")
-            return {
-                "status": "error",
-                "error": f"Failed to parse ruleset: {str(e)}",
-                "raw_output": llm_response
-            }
+            logger.error(f"Error parsing LLM response: {str(e)}")
+            return {"status": "error", "message": f"Error parsing LLM response: {str(e)}"}
     
     # Create and return the expert agent
     return ExpertAgent(
         name="Rule Extractor",
-        capabilities=["rule_extraction"],
+        capabilities=["rule_extraction", "data_analysis"],
         behavior=rule_extraction_behavior,
-        description="Extracts rules from data patterns and analysis"
+        description="Extracts rules from data analysis"
     )
+
+def get_applications_from_context_or_file(context):
+    """Get applications from context or file"""
+    applications = []
+    for key, value in context.items():
+        if isinstance(value, dict) and value.get("agent_name") == "Data Generator":
+            if "applications" in value.get("result", {}):
+                applications = value["result"]["applications"]
+                logger.info(f"Found {len(applications)} applications in context")
+                break
+    
+    # If no applications in context, try loading from files
+    if not applications and os.path.exists(APPLICATIONS_DIR):
+        application_files = [f for f in os.listdir(APPLICATIONS_DIR) 
+                          if f.startswith("application_") and f.endswith(".json")]
+        
+        if application_files:
+            applications = []
+            for f in application_files:
+                file_path = os.path.join(APPLICATIONS_DIR, f)
+                try:
+                    with open(file_path, 'r') as file:
+                        application = json.load(file)
+                        applications.append(application)
+                except Exception as e:
+                    logger.error(f"Error loading application from {file_path}: {str(e)}")
+    
+    return applications
+
+def get_hidden_approvals():
+    """Get hidden approvals from file"""
+    hidden_approvals = {}
+    hidden_approvals_file = os.path.join(APPLICATIONS_DIR, "hidden_approvals.json")
+    if os.path.exists(hidden_approvals_file):
+        try:
+            with open(hidden_approvals_file, 'r') as f:
+                hidden_approvals = json.load(f)
+                logger.info(f"Loaded hidden approvals with {len(hidden_approvals)} entries")
+        except Exception as e:
+            logger.error(f"Error loading hidden approvals: {str(e)}")
+    
+    return hidden_approvals
+
+def apply_ruleset(ruleset, application):
+    """Apply a ruleset to an application"""
+    logic = ruleset.get("logic", "all")
+    
+    if logic == "scoring":
+        # Apply scoring rules
+        total_score = 0
+        for rule in ruleset.get("rules", []):
+            if rule.get("type") == "range":
+                # Get field value
+                value = get_nested_value(application, rule.get("field"))
+                # Find matching range
+                for range_def in rule.get("ranges", []):
+                    min_val = range_def.get("min", 0)
+                    max_val = range_def.get("max", float('inf'))
+                    if min_val <= value <= max_val:
+                        total_score += range_def.get("score", 0)
+                        break
+            elif rule.get("type") == "categorical":
+                # Get field value
+                value = get_nested_value(application, rule.get("field"))
+                # Look up in categories
+                if value in rule.get("categories", {}):
+                    total_score += rule.get("categories", {}).get(value, 0)
+        
+        # Compare to threshold
+        return total_score >= ruleset.get("threshold", 60)
+    
+    # Standard rule logic
+    rules = ruleset.get("rules", [])
+    if not rules:
+        return False
+    
+    # Apply each rule
+    results = []
+    for rule in rules:
+        field = rule.get("field", "")
+        condition = rule.get("condition", "")
+        rule_value = rule.get("value", "")
+        
+        # Get field value from application
+        app_value = get_nested_value(application, field)
+        
+        # Evaluate condition
+        result = False
+        try:
+            if condition == "==": result = app_value == rule_value
+            elif condition == "!=": result = app_value != rule_value
+            elif condition == ">=": result = float(app_value) >= float(rule_value)
+            elif condition == "<=": result = float(app_value) <= float(rule_value)
+            elif condition == ">": result = float(app_value) > float(rule_value)
+            elif condition == "<": result = float(app_value) < float(rule_value)
+        except:
+            result = False
+        
+        results.append(result)
+    
+    # Apply logic
+    if logic == "all":
+        return all(results)
+    elif logic == "any":
+        return any(results)
+    
+    return False
+
+def get_nested_value(obj, path):
+    """Get a value from a nested object using a dot path"""
+    if not path:
+        return None
+        
+    parts = path.split('.')
+    value = obj
+    
+    for part in parts:
+        if isinstance(value, dict) and part in value:
+            value = value[part]
+        else:
+            return None
+    
+    return value

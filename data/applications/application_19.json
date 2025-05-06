@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Emma",
-    "lastName": "Brown",
-    "dateOfBirth": "1990-03-03",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 22000,
-    "employmentStatus": "Self-employed",
-    "existingDebt": 18000
+  "personalDetails": {
+    "name": "Applicant 1797",
+    "age": 36,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 630,
-    "paymentHistory": "Collections"
+    "creditScore": 727,
+    "creditTier": "Good",
+    "paymentHistory": "Excellent",
+    "creditUtilization": 25
   },
-  "requestedCreditDetails": {
-    "cardType": "Rewards",
-    "creditLimit": 6000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 117165,
+    "incomeTier": "Very High",
+    "existingDebt": 46028,
+    "debtRatio": 0.39285127480427073,
+    "debtTier": "Low",
+    "employmentStatus": "Self-employed",
+    "monthlyExpenses": 2784
   }
 }

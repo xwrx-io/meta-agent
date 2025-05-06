@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Alice",
-    "lastName": "Smith",
-    "dateOfBirth": "1987-08-22",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 30000,
-    "employmentStatus": "Unemployed",
-    "existingDebt": 20000
+  "personalDetails": {
+    "name": "Applicant 8066",
+    "age": 23,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 580,
-    "paymentHistory": "Default accounts"
+    "creditScore": 692,
+    "creditTier": "Good",
+    "paymentHistory": "Fair",
+    "creditUtilization": 86
   },
-  "requestedCreditDetails": {
-    "cardType": "Platinum",
-    "creditLimit": 10000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 37789,
+    "incomeTier": "Low",
+    "existingDebt": 10967,
+    "debtRatio": 0.29022322594413696,
+    "debtTier": "Low",
+    "employmentStatus": "Unemployed",
+    "monthlyExpenses": 4094
   }
 }

@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "John",
-    "lastName": "Doe",
-    "dateOfBirth": "1992-05-17",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 24000,
-    "employmentStatus": "Part-time",
-    "existingDebt": 15000
+  "personalDetails": {
+    "name": "Applicant 4869",
+    "age": 51,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 620,
-    "paymentHistory": "Missed payments"
+    "creditScore": 804,
+    "creditTier": "Excellent",
+    "paymentHistory": "Fair",
+    "creditUtilization": 48
   },
-  "requestedCreditDetails": {
-    "cardType": "Standard",
-    "creditLimit": 5000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 122621,
+    "incomeTier": "Very High",
+    "existingDebt": 38469,
+    "debtRatio": 0.3137282141248057,
+    "debtTier": "Low",
+    "employmentStatus": "Self-employed",
+    "monthlyExpenses": 1426
   }
 }

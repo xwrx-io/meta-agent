@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Michael",
-    "lastName": "Johnson",
-    "dateOfBirth": "1978-02-09",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 40000,
-    "employmentStatus": "Contract",
-    "existingDebt": 30000
+  "personalDetails": {
+    "name": "Applicant 1297",
+    "age": 30,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 640,
-    "paymentHistory": "Occasional late payment"
+    "creditScore": 849,
+    "creditTier": "Excellent",
+    "paymentHistory": "Good",
+    "creditUtilization": 56
   },
-  "requestedCreditDetails": {
-    "cardType": "Platinum",
-    "creditLimit": 7000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 90378,
+    "incomeTier": "High",
+    "existingDebt": 29595,
+    "debtRatio": 0.3274583950745916,
+    "debtTier": "Low",
+    "employmentStatus": "Part-time",
+    "monthlyExpenses": 4929
   }
 }

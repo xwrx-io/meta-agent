@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Emma",
-    "lastName": "Davis",
-    "dateOfBirth": "1995-12-02",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 95000,
-    "employmentStatus": "Employed",
-    "existingDebt": 1500
+  "personalDetails": {
+    "name": "Applicant 9255",
+    "age": 57,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 765,
-    "paymentHistory": "Very Good"
+    "creditScore": 715,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 85
   },
-  "requestedCreditDetails": {
-    "cardType": "Gold",
-    "creditLimit": 22000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 69134,
+    "incomeTier": "Medium",
+    "existingDebt": 12700,
+    "debtRatio": 0.18370971001816666,
+    "debtTier": "Very Low",
+    "employmentStatus": "Employed",
+    "monthlyExpenses": 2579
   }
 }

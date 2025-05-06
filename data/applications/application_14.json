@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Sarah",
-    "lastName": "Williams",
-    "dateOfBirth": "1992-07-15",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 35000,
-    "employmentStatus": "Self-employed",
-    "existingDebt": 25000
+  "personalDetails": {
+    "name": "Applicant 7733",
+    "age": 52,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 610,
-    "paymentHistory": "Several defaults"
+    "creditScore": 684,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 37
   },
-  "requestedCreditDetails": {
-    "cardType": "Standard",
-    "creditLimit": 2000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 123486,
+    "incomeTier": "Very High",
+    "existingDebt": 74042,
+    "debtRatio": 0.5996056798747862,
+    "debtTier": "Medium",
+    "employmentStatus": "Unemployed",
+    "monthlyExpenses": 2921
   }
 }

@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Sophia",
-    "lastName": "Martinez",
-    "dateOfBirth": "1991-09-10",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 90000,
-    "employmentStatus": "Employed",
-    "existingDebt": 3000
+  "personalDetails": {
+    "name": "Applicant 8897",
+    "age": 53,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 730,
-    "paymentHistory": "Good"
+    "creditScore": 711,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 84
   },
-  "requestedCreditDetails": {
-    "cardType": "Standard",
-    "creditLimit": 15000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 140179,
+    "incomeTier": "Very High",
+    "existingDebt": 50197,
+    "debtRatio": 0.35809922257173366,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "monthlyExpenses": 1089
   }
 }

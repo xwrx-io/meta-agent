@@ -5,30 +5,22 @@ from dotenv import load_dotenv
 from meta_agent_system.utils.logger import get_logger
 from meta_agent_system.utils.helpers import save_json, get_timestamp, ensure_directory_exists
 from meta_agent_system.llm.openai_client import OpenAIClient
-from meta_agent_system.core.meta_agent import MetaAgent
-from meta_agent_system.core.expert_factory import ExpertFactory
-from meta_agent_system.experts.task_decomposer import create_task_decomposer
-from meta_agent_system.config.settings import RESULTS_DIR
-from meta_agent_system.experts.schema_designer import create_schema_designer
-from meta_agent_system.experts.data_generator import create_data_generator
-from meta_agent_system.experts.data_analyzer import create_data_analyzer
-from meta_agent_system.experts.rule_extractor import create_rule_extractor
+from meta_agent_system.config.settings import RESULTS_DIR, APPLICATIONS_DIR
 from meta_agent_system.experts.validator import create_validator
-from meta_agent_system.core.success_criteria import SuccessCriteriaChecker
-from meta_agent_system.core.feedback_loop import FeedbackLoop
+from meta_agent_system.experts.rule_analyzer import create_rule_analyzer
 from meta_agent_system.experts.rule_refiner import create_rule_refiner
-from meta_agent_system.experts.expertise_recommender import create_expertise_recommender
+from meta_agent_system.utils.visualization_helper import generate_accuracy_visualization
 import time
-import psutil
 import matplotlib.pyplot as plt
 from datetime import datetime
-import platform
+import os
+from meta_agent_system.experts.misclassification_analyzer import analyze_misclassifications
 
 # Configure logging
 logger = get_logger(__name__)
 
 def main():
-    """Main entry point for meta agent system"""
+    """Main entry point for credit card rule discovery system"""
     # Load environment variables
     load_dotenv()
     
@@ -38,446 +30,260 @@ def main():
         print("You can create a .env file with OPENAI_API_KEY=your-key-here")
         sys.exit(1)
     
-    print("\n=== Meta Agent System ===\n")
+    print("\n=== Credit Card Rule Discovery System ===\n")
     print("Initializing system...")
     
     # Initialize OpenAI client
     openai_client = OpenAIClient()
     
-    # Create expert factory
-    expert_factory = ExpertFactory(llm_client=openai_client)
-    
-    # Create meta agent
-    meta = MetaAgent("Dynamic Meta Agent")
-    
-    # Attach expert factory to meta agent
-    meta.expert_factory = expert_factory
-    
-    # Register task decomposer expert
-    task_decomposer = create_task_decomposer(openai_client)
-    meta.register_agent(task_decomposer)
-    
-    # Register core experts in the main function
-    schema_designer = create_schema_designer(openai_client)
-    data_generator = create_data_generator(openai_client)
-    data_analyzer = create_data_analyzer(openai_client)
-    rule_extractor = create_rule_extractor(openai_client)
+    # Create our core experts
     validator = create_validator(openai_client)
-    
-    meta.register_agent(schema_designer)
-    meta.register_agent(data_generator)
-    meta.register_agent(data_analyzer)
-    meta.register_agent(rule_extractor)
-    meta.register_agent(validator)
-    
-    # Create and register the rule refiner - now with general capability
+    rule_analyzer = create_rule_analyzer(openai_client)
     rule_refiner = create_rule_refiner(openai_client)
-    meta.register_agent(rule_refiner)
     
-    # Create success criteria checker
-    success_checker = SuccessCriteriaChecker(criteria_type="credit_card_rules")
-    
-    # Create and add expertise recommender
-    expertise_recommender = create_expertise_recommender(openai_client)
-    meta.register_agent(expertise_recommender)
-    
-    # Create feedback loop and attach components
-    feedback_loop = FeedbackLoop(
-        success_criteria_checker=success_checker,
-        expertise_recommender=expertise_recommender,
-        expert_factory=expert_factory
-    )
-    
-    # Attach feedback loop to meta agent
-    meta.feedback_loop = feedback_loop
-    
-    # Define problem
-    problem = get_credit_card_ruleset_problem()
-    
-    # Display problem info
-    print(f"\nProblem: {problem['description']}")
-    print("\nStarting execution...\n")
-    
-    # Solve the problem
-    results = meta.solve(problem, max_iterations=30)
-    
-    # Display summary
-    print("\n=== Execution Summary ===")
-    print(f"Status: {results['status']}")
-    print(f"Iterations: {results['iterations']}")
-    print(f"Tasks completed: {results['tasks_completed']}")
-    print(f"Tasks remaining: {results['tasks_remaining']}")
-    
-    # Save results
-    timestamp = get_timestamp()
-    results_file = os.path.join(RESULTS_DIR, f"results_{timestamp}.json")
+    # Ensure results directory exists
     ensure_directory_exists(RESULTS_DIR)
-    save_json(results, results_file)
     
-    print(f"\nResults saved to {results_file}")
-
-    # Add enhanced summary
-    generate_enhanced_summary(results)
-
-    print("\nMeta Agent execution complete!")
-
-def get_credit_card_ruleset_problem():
-    """Define the credit card ruleset problem"""
-    return {
-        "description": "Discover credit card application approval rules from sample applications",
-        "type": "task_decomposition",
-        "data": {
-            "context": """
-We need to analyze credit card applications to discover the ruleset used for approving or declining applications.
-We have 20 credit card applications, 10 of which were approved and 10 of which were declined.
-The meta agent system must discover the rules used for approval or rejection without being told which applications were approved or declined.
-            """,
-            "requirements": [
-                "Create a JSON schema for credit card applications",
-                "Generate 20 diverse credit card applications (10 approved, 10 declined)",
-                "Analyze the applications to discover patterns",
-                "Extract rules that determine approval or rejection",
-                "Validate the rules by applying them to all 20 applications"
-            ],
-            "constraints": [
-                "The meta agent must not know in advance which applications were approved or declined",
-                "The rules must be clear and understandable",
-                "The rules must achieve 100% accuracy on the 20 applications"
-            ]
-        }
+    # Define maximum iterations
+    max_iterations = 10
+    
+    print("\nStarting rule discovery process...\n")
+    
+    # Initial ruleset - starting point
+    initial_ruleset = {
+        "logic": "all",
+        "rules": [
+            {
+                "field": "creditHistory.creditScore",
+                "condition": "greater_than",
+                "threshold": 650
+            },
+            {
+                "field": "financialInformation.annualIncome",
+                "condition": "greater_than",
+                "threshold": 30000
+            },
+            {
+                "field": "creditHistory.paymentHistory",
+                "condition": "in",
+                "values": ["Excellent", "Good"]
+            }
+        ],
+        "description": "Initial ruleset based on common credit card approval factors",
+        "timestamp": int(time.time()),
+        "iteration": 0
     }
-
-def generate_enhanced_summary(results):
-    """Generate an enhanced summary of the meta-agent run"""
-    print("\n=== Enhanced Meta-Agent System Summary ===")
     
-    # 1. Existing agents used
-    print("\n1. Original Expert Agents Used:")
-    initial_agents = [
-        "Task Decomposer", "Schema Designer", "Data Generator", 
-        "Data Analyzer", "Rule Extractor", "Validator", 
-        "Rule Refiner", "Expertise Recommender"
-    ]
-    for agent in initial_agents:
-        print(f"  - {agent}")
+    # Save initial ruleset
+    ruleset_file = os.path.join(RESULTS_DIR, "credit_card_approval_rules.json")
+    with open(ruleset_file, 'w') as f:
+        json.dump(initial_ruleset, f, indent=2)
     
-    # 2. New expert agents spawned
-    created_experts = {}  # Change from set to dict to store name -> prompt
-    for result in results.get("results", []):
-        if result.get("agent_name") == "Expertise Recommender":
-            for expert in result.get("result", {}).get("recommendations", []):
-                name = expert.get("name")
-                prompt = expert.get("system_prompt", "No prompt provided")
-                if name:
-                    created_experts[name] = prompt
-        # Also check for actually created experts in expert factory results
-        elif result.get("agent_name") == "ExpertFactory" and result.get("task_type") == "create_expert":
-            expert_data = result.get("result", {})
-            name = expert_data.get("name")
-            prompt = expert_data.get("system_prompt", "No prompt provided")
-            if name:
-                created_experts[name] = prompt
-        # Check for dynamically created experts in meta-agent context
-        elif "expert_creation" in result.get("result", {}).get("status", ""):
-            expert_data = result.get("result", {})
-            name = expert_data.get("name")
-            prompt = expert_data.get("system_prompt", "No prompt provided")
-            if name:
-                created_experts[name] = prompt
+    # Initialize variables to track progress
+    current_accuracy = 0
+    best_accuracy = 0
+    best_ruleset = initial_ruleset
+    best_iteration = 0
+    consecutive_decreases = 0
+    iteration = 0
     
-    print(f"\n2. New Expert Agents Created ({len(created_experts)}):")
-    for expert, prompt in sorted(created_experts.items()):
-        print(f"  - {expert}")
-        print(f"    System Prompt:")
+    # Main iteration loop
+    while current_accuracy < 100 and iteration < max_iterations:
+        iteration += 1
+        print(f"\n--- Iteration {iteration} ---")
         
-        # Display the full system prompt with proper indentation
-        prompt_lines = prompt.split('\n')
-        for line in prompt_lines:
-            # Indent each line for readability
-            print(f"      | {line}")
+        # Step 1: Validate current ruleset
+        print("Validating current ruleset...")
+        validation_result = validator.execute({
+            "description": "Validate credit card approval rules",
+            "data": {"iteration": iteration}
+        })
         
-        print()  # Add blank line for readability
-    
-    # 3. Application test results
-    print("\n3. Credit Card Application Test Results:")
-    
-    # Get initial validation result
-    initial_validation = None
-    final_validation = None
-    rule_refinements = []
-    
-    for result in results.get("results", []):
-        if result.get("agent_name") == "Validator":
-            initial_validation = result
-        elif result.get("agent_name") == "Rule Refiner":
-            rule_refinements.append(result)
-    
-    if rule_refinements:
-        final_validation = rule_refinements[-1]
-    
-    # Display initial and final accuracy
-    initial_accuracy = 0
-    if initial_validation:
-        initial_accuracy = initial_validation.get("result", {}).get("accuracy", 0)
-        print(f"  - Initial Accuracy: {initial_accuracy}%")
-        inconsistencies = initial_validation.get("result", {}).get("validation_results", {}).get("inconsistencies", [])
-        print(f"  - Initial Inconsistencies: {len(inconsistencies)}")
-        for issue in inconsistencies:
-            print(f"    * {issue.get('applicant')}: {issue.get('issue')}")
-    
-    # 4. Compare initial vs final rules
-    print("\n4. Rules Evolution - Initial vs Final:")
-    
-    initial_rules = None
-    for result in results.get("results", []):
-        if result.get("agent_name") == "Rule Extractor":
-            initial_rules = result.get("result", {}).get("ruleset", {}).get("rules", [])
+        current_accuracy = validation_result.get("accuracy", 0)
+        print(f"Current accuracy: {current_accuracy:.2f}%")
+        
+        # Update best accuracy if improved
+        if current_accuracy > best_accuracy:
+            best_accuracy = current_accuracy
+            best_iteration = iteration
+            best_ruleset = None  # Will load from file
+            
+            # Save a backup of this best ruleset
+            try:
+                with open(ruleset_file, 'r') as f:
+                    best_ruleset = json.load(f)
+                
+                best_ruleset_file = os.path.join(RESULTS_DIR, f"best_ruleset_iteration_{iteration}.json")
+                with open(best_ruleset_file, 'w') as f:
+                    json.dump(best_ruleset, f, indent=2)
+                    
+                print(f"New best accuracy: {best_accuracy:.2f}%")
+            except Exception as e:
+                logger.error(f"Error saving best ruleset: {str(e)}")
+        else:
+            consecutive_decreases += 1
+        
+        # New step: Perform detailed misclassification analysis
+        print("Analyzing misclassifications in depth...")
+        detailed_analysis = analyze_misclassifications()
+        print(f"Found {len(detailed_analysis)} misclassified applications to focus on")
+        
+        # If we've reached 100% accuracy, break the loop
+        if current_accuracy == 100:
+            print("\nPerfect accuracy achieved! Ruleset correctly classifies all applications.")
             break
-    
-    final_rules = None
-    if final_validation:
-        final_rules = final_validation.get("result", {}).get("ruleset", {}).get("rules", [])
-    
-    if initial_rules and final_rules:
-        # Compare key thresholds
-        comparison_fields = {
-            "creditHistory.creditScore": (">=", "Credit Score"),
-            "financialInformation.annualIncome": (">=", "Annual Income"),
-            "financialInformation.existingDebt": ("<=", "Debt-to-Income Ratio")
-        }
         
-        print("  | Parameter              | Initial Value | Final Value | Change  |")
-        print("  |------------------------|--------------|-------------|---------|")
+        # Step 2: Analyze applications to find patterns
+        print("Analyzing application patterns...")
+        analysis_result = rule_analyzer.execute({
+            "description": "Analyze credit card applications for patterns",
+            "data": {"iteration": iteration}
+        })
         
-        for field, (condition, display_name) in comparison_fields.items():
-            initial_value = "N/A"
-            final_value = "N/A"
+        # Step 3: Refine rules based on validation and analysis
+        print("Refining ruleset...")
+        refinement_result = rule_refiner.execute({
+            "description": "Refine credit card approval rules",
+            "data": {"iteration": iteration, "consecutive_decreases": consecutive_decreases}
+        })
+        
+        # Print refinement summary
+        ruleset = refinement_result.get("ruleset", {})
+        
+        # Check if the ruleset has nested rules (better logging)
+        nested_rule_count = 0
+        for rule in ruleset.get("rules", []):
+            if "rules" in rule and isinstance(rule.get("rules"), list):
+                nested_rule_count += 1
+        
+        # Better reporting of rule complexity
+        if nested_rule_count > 0:
+            print(f"Rules refined. New ruleset has {len(ruleset.get('rules', []))} rules " +
+                  f"with '{ruleset.get('logic', 'all')}' logic and {nested_rule_count} nested rule groups.")
+        else:
+            print(f"Rules refined. New ruleset has {len(ruleset.get('rules', []))} rules " +
+                  f"with '{ruleset.get('logic', 'all')}' logic.")
+        
+        # Reset consecutive decreases counter if we saw an improvement
+        if current_accuracy > validation_result.get("previous_accuracy", 0):
+            consecutive_decreases = 0
+        
+        # Optional: Add a small pause between iterations
+        time.sleep(1)
+    
+    # Summarize results
+    print("\n=== Rule Discovery Summary ===")
+    print(f"Iterations completed: {iteration}")
+    print(f"Final accuracy: {current_accuracy:.2f}%")
+    print(f"Best accuracy: {best_accuracy:.2f}% (iteration {best_iteration})")
+    
+    # Generate visualization
+    viz_file = generate_accuracy_visualization()
+    if viz_file:
+        print(f"Accuracy visualization saved to: {viz_file}")
+    
+    # Load final ruleset - use best ruleset if available and better than final
+    final_ruleset = {}
+    if best_ruleset and best_accuracy > current_accuracy:
+        final_ruleset = best_ruleset
+        # Also save it as the final ruleset
+        with open(ruleset_file, 'w') as f:
+            json.dump(best_ruleset, f, indent=2)
+        print(f"Restored best ruleset from iteration {best_iteration} (accuracy: {best_accuracy:.2f}%)")
+    else:
+        try:
+            with open(ruleset_file, 'r') as f:
+                final_ruleset = json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading final ruleset: {str(e)}")
+    
+    # Print final ruleset
+    print("\nFinal Credit Card Approval Rules:")
+    print(f"Logic: {final_ruleset.get('logic', 'all').upper()}")
+    print(f"Rule count: {len(final_ruleset.get('rules', []))}")
+    
+    for i, rule in enumerate(final_ruleset.get("rules", [])):
+        print_rule(rule)
+    
+    # Print ruleset description
+    print("\nRuleset rationale:")
+    print(final_ruleset.get("description", "No description provided"))
+    
+    print("\nRule discovery process complete!")
+
+def explore_applications():
+    """Utility function to explore the application data"""
+    if not os.path.exists(APPLICATIONS_DIR):
+        print("Applications directory not found.")
+        return
+    
+    application_files = [f for f in os.listdir(APPLICATIONS_DIR) 
+                        if f.startswith("application_") and f.endswith(".json")]
+    
+    print(f"Found {len(application_files)} applications.")
+    
+    # Load hidden approvals
+    hidden_approvals = {}
+    hidden_approvals_file = os.path.join(APPLICATIONS_DIR, "hidden_approvals.json")
+    if os.path.exists(hidden_approvals_file):
+        try:
+            with open(hidden_approvals_file, 'r') as f:
+                hidden_approvals = json.load(f)
+        except Exception as e:
+            print(f"Error loading hidden approvals: {str(e)}")
+    
+    # Count approved and declined
+    approved_count = sum(1 for value in hidden_approvals.values() if value)
+    declined_count = sum(1 for value in hidden_approvals.values() if not value)
+    
+    print(f"Applications: {approved_count} approved, {declined_count} declined")
+    
+    # Print first application as example
+    if application_files:
+        sample_file = os.path.join(APPLICATIONS_DIR, application_files[0])
+        try:
+            with open(sample_file, 'r') as f:
+                sample_app = json.load(f)
             
-            # Find initial value
-            for rule in initial_rules:
-                if rule.get("field") == field and rule.get("condition") == condition:
-                    initial_value = rule.get("value")
-                    break
-            
-            # Find final value
-            for rule in final_rules:
-                if rule.get("field") == field and rule.get("condition") == condition:
-                    final_value = rule.get("value")
-                    break
-            
-            # Calculate change
-            if isinstance(initial_value, (int, float)) and isinstance(final_value, (int, float)):
-                change = final_value - initial_value
-                change_str = f"{change:+.2f}" if isinstance(change, float) else f"{change:+d}"
-            else:
-                change_str = "N/A"
-            
-            print(f"  | {display_name:<22} | {initial_value:<12} | {final_value:<11} | {change_str:<7} |")
-        
-        # Compare employment status acceptance
-        initial_statuses = []
-        final_statuses = []
-        
-        for rule in initial_rules:
-            if rule.get("field") == "financialInformation.employmentStatus" and rule.get("condition") == "in":
-                initial_statuses = rule.get("value", [])
-                break
-        
-        for rule in final_rules:
-            if rule.get("field") == "financialInformation.employmentStatus" and rule.get("condition") == "in":
-                final_statuses = rule.get("value", [])
-                break
-        
-        added_statuses = set(final_statuses) - set(initial_statuses)
-        print("\n  Employment Status Acceptance:")
-        print(f"  - Initial: {', '.join(initial_statuses)}")
-        print(f"  - Final: {', '.join(final_statuses)}")
-        if added_statuses:
-            print(f"  - Added: {', '.join(added_statuses)} ✅")
+            print("\nSample application structure:")
+            print(json.dumps(sample_app, indent=2))
+        except Exception as e:
+            print(f"Error loading sample application: {str(e)}")
+
+def print_rule(rule, indent=0):
+    """Print a rule with proper indentation for nested rules"""
+    indent_str = "  " * indent
     
-    # 5. Visual representation of accuracy improvements
-    print("\n5. Accuracy Improvement Visualization:")
+    # Handle nested rules
+    if "rules" in rule and "logic" in rule:
+        print(f"{indent_str}Rule Group ({rule['logic'].upper()}):")
+        for sub_rule in rule["rules"]:
+            print_rule(sub_rule, indent + 1)
+        return
     
-    # Collect accuracy metrics across iterations
-    accuracy_data = []
-    if initial_validation:
-        accuracy_data.append(("Initial", initial_validation.get("result", {}).get("accuracy", 0)))
+    # Handle ratio rules
+    if rule.get("type") == "ratio":
+        print(f"{indent_str}Rule: {rule.get('numerator_field')} to {rule.get('denominator_field')} ratio {rule.get('condition')} {rule.get('threshold')}")
+        return
     
-    for i, refinement in enumerate(rule_refinements):
-        # Estimate accuracy improvement (in a real system this would be actual validation results)
-        estimated_accuracy = min(100, initial_accuracy + (i + 1) * (100 - initial_accuracy) / len(rule_refinements))
-        accuracy_data.append((f"Refinement {i+1}", estimated_accuracy))
+    # Handle range rules
+    if rule.get("type") == "range":
+        print(f"{indent_str}Rule: {rule.get('field')} between {rule.get('min')} and {rule.get('max')}")
+        return
     
-    # Simple ASCII chart
-    if accuracy_data:
-        print("  Accuracy %")
-        print("  100 |" + "─" * 50)
-        
-        for label, acc in accuracy_data:
-            bar_length = int(acc / 2)  # Scale to fit in 50 chars
-            bar = "█" * bar_length
-            print(f"  {acc:3.0f} |{bar}")
-        
-        print("      └" + "─" * 50)
-        print("        Initial" + " " * 35 + "Final")
+    # Handle standard rules
+    field = rule.get("field", "")
+    condition = rule.get("condition", "")
+    threshold = rule.get("threshold")
+    values = rule.get("values", [])
     
-    # 6. Runtime metrics
-    print("\n6. Runtime Metrics by Phase:")
-    print("  | Phase                | Duration (sec) |")
-    print("  |----------------------|---------------|")
+    rule_str = f"{indent_str}Rule: {field} {condition}"
+    if threshold is not None:
+        rule_str += f" {threshold}"
+    elif values:
+        rule_str += f" {values}"
     
-    # Extract task completion times
-    task_types = {
-        "task_decomposition": "Problem Decomposition",
-        "schema_design": "Schema Creation",
-        "data_generation": "Data Generation",
-        "data_analysis": "Data Analysis",
-        "rule_extraction": "Rule Extraction",
-        "validation": "Validation",
-        "expertise_recommendation": "Expertise Recommendation",
-        "general": "Rule Refinement"
-    }
-    
-    task_durations = {}
-    for result in results.get("results", []):
-        task_id = result.get("task_id")
-        agent_name = result.get("agent_name")
-        
-        task_data = results.get("context", {}).get(f"task_{task_id}", {})
-        created_at = task_data.get("created_at", 0)
-        completed_at = task_data.get("completed_at", 0)
-        
-        if created_at and completed_at:
-            duration = completed_at - created_at
-            task_type = task_data.get("task_type", agent_name)
-            
-            if task_type in task_types:
-                phase_name = task_types[task_type]
-                if phase_name not in task_durations:
-                    task_durations[phase_name] = duration
-                else:
-                    task_durations[phase_name] += duration
-    
-    total_duration = 0
-    for phase, duration in sorted(task_durations.items(), key=lambda x: x[1], reverse=True):
-        total_duration += duration
-        print(f"  | {phase:<20} | {duration:13.2f} |")
-    
-    print(f"  | {'Total':<20} | {total_duration:13.2f} |")
-    
-    # 7. Memory usage statistics
-    print("\n7. System Resource Usage:")
-    process = psutil.Process(os.getpid())
-    memory_info = process.memory_info()
-    
-    print(f"  - Peak Memory Usage: {memory_info.rss / (1024 * 1024):.2f} MB")
-    print(f"  - CPU Usage: {psutil.cpu_percent()}%")
-    print(f"  - System: {platform.system()} {platform.version()}")
-    
-    # 8. Final ruleset summary - UPDATED to show complete ruleset
-    if final_validation:
-        print("\n8. Final Credit Card Approval Rules:")
-        ruleset = final_validation.get("result", {}).get("ruleset", {})
-        rules = ruleset.get("rules", [])
-        logic = ruleset.get("logic", "all")
-        description = ruleset.get("description", "No description provided")
-        
-        print(f"  - Rule Combination Logic: {logic.upper()}")
-        print(f"  - Description: {description}")
-        print(f"  - Total Rules: {len(rules)}")
-        print("\n  Complete Ruleset:")
-        
-        # Display a more readable format for the complete ruleset
-        print("  COMPLETE RULESET DETAILS:")
-        print("  " + "=" * 80)
-        
-        for i, rule in enumerate(rules):
-            field = rule.get("field", "N/A")
-            condition = rule.get("condition", "N/A")
-            value = rule.get("value", "N/A")
-            importance = rule.get("importance", "low")
-            reason = rule.get("reason", "")
-            note = rule.get("note", "")
-            
-            print(f"  RULE #{i+1}:")
-            print(f"  - Field:      {field}")
-            print(f"  - Condition:  {condition}")
-            
-            # Format value display based on type without truncation
-            if isinstance(value, list):
-                print(f"  - Value:      {value}")
-            elif isinstance(value, dict):
-                print(f"  - Value:      {json.dumps(value, indent=2).replace('{', '{\n    ').replace('}', '\n}')}")
-            else:
-                print(f"  - Value:      {value}")
-            
-            print(f"  - Importance: {importance}")
-            
-            if reason:
-                print(f"  - Reason:     {reason}")
-            if note:
-                print(f"  - Note:       {note}")
-            
-            print("  " + "-" * 80)
-        
-        # Additional summary
-        print("\n  RULE TYPE SUMMARY:")
-        field_types = {}
-        for rule in rules:
-            field = rule.get("field", "unknown")
-            if field not in field_types:
-                field_types[field] = 1
-            else:
-                field_types[field] += 1
-        
-        for field, count in field_types.items():
-            print(f"  - {field}: {count} rule(s)")
-    
-    # 9. Recommendations for future runs
-    print("\n9. Recommendations for Future Runs:")
-    
-    # Generate some intelligent recommendations based on results
-    recommendations = [
-        "Increase diversity of test data to improve rule robustness",
-        "Implement a validation step after each rule refinement iteration",
-        "Add specialized experts for employment status assessment",
-        "Consider adding fuzzy logic for partial rule matching",
-        "Implement a confidence score for predictions"
-    ]
-    
-    for rec in recommendations:
-        print(f"  - {rec}")
-    
-    # Overall outcome
-    print("\n10. Outcome:")
-    iterations = results.get("iterations", 0)
-    feedback_loops = results.get("feedback_loops", 0)
-    print(f"  - Completed in {iterations} iterations with {feedback_loops} feedback loops")
-    print(f"  - Final system utilized {len(initial_agents) + len(created_experts)} expert agents")
-    print("  - Successfully identified and refined rules for credit card approval")
-    
-    # Generate and save visualization
-    try:
-        plt.figure(figsize=(10, 6))
-        
-        # Plot accuracy improvement
-        labels, values = zip(*accuracy_data)
-        plt.plot(labels, values, marker='o', linestyle='-', linewidth=2, markersize=8)
-        plt.title('Credit Card Approval Accuracy Improvement')
-        plt.ylabel('Accuracy (%)')
-        plt.xlabel('Refinement Iteration')
-        plt.grid(True)
-        plt.ylim(0, 105)
-        
-        # Save the plot
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        plot_file = f"data/results/accuracy_improvement_{timestamp}.png"
-        plt.savefig(plot_file)
-        print(f"\nAccuracy visualization saved to: {plot_file}")
-    except Exception as e:
-        print(f"\nCouldn't generate visualization: {str(e)}")
-    
-    print("\nMeta Agent Process Complete!")
+    print(rule_str)
 
 if __name__ == "__main__":
     main()

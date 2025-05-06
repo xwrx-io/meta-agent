@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Liam",
-    "lastName": "Smith",
-    "dateOfBirth": "1990-11-05",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 80000,
-    "employmentStatus": "Full-time",
-    "existingDebt": 3000
+  "personalDetails": {
+    "name": "Applicant 8857",
+    "age": 59,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 710,
-    "paymentHistory": "Good"
+    "creditScore": 600,
+    "creditTier": "Very Poor",
+    "paymentHistory": "Fair",
+    "creditUtilization": 41
   },
-  "requestedCreditDetails": {
-    "cardType": "Silver",
-    "creditLimit": 10000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 50246,
+    "incomeTier": "Medium",
+    "existingDebt": 15994,
+    "debtRatio": 0.3183237947270627,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "monthlyExpenses": 4430
   }
 }

@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Alice",
-    "lastName": "Johnson",
-    "dateOfBirth": "1988-05-23",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 85000,
-    "employmentStatus": "Employed",
-    "existingDebt": 5000
+  "personalDetails": {
+    "name": "Applicant 3858",
+    "age": 28,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 750,
-    "paymentHistory": "Excellent"
+    "creditScore": 825,
+    "creditTier": "Excellent",
+    "paymentHistory": "Good",
+    "creditUtilization": 66
   },
-  "requestedCreditDetails": {
-    "cardType": "Platinum",
-    "creditLimit": 20000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 56187,
+    "incomeTier": "Medium",
+    "existingDebt": 17658,
+    "debtRatio": 0.31427512794804036,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "monthlyExpenses": 1468
   }
 }

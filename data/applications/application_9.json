@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Aisha",
-    "lastName": "Khan",
-    "dateOfBirth": "1982-03-15",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 105000,
-    "employmentStatus": "Part-time",
-    "existingDebt": 1500
+  "personalDetails": {
+    "name": "Applicant 7344",
+    "age": 63,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 730,
-    "paymentHistory": "Excellent"
+    "creditScore": 687,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 88
   },
-  "requestedCreditDetails": {
-    "cardType": "Platinum",
-    "creditLimit": 18000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 30255,
+    "incomeTier": "Low",
+    "existingDebt": 10370,
+    "debtRatio": 0.34278606550708307,
+    "debtTier": "Medium",
+    "employmentStatus": "Part-time",
+    "monthlyExpenses": 4968
   }
 }

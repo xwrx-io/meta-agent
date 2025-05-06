@@ -1,74 +1,38 @@
-from typing import Dict, Any, List, Callable, Optional
-from meta_agent_system.utils.logger import get_logger
-
-logger = get_logger(__name__)
+from typing import Dict, Any, Callable
 
 class ExpertAgent:
-    """
-    Base class for expert agents that can handle specific types of tasks.
+    """A simplified expert agent that performs a specialized task"""
     
-    Attributes:
-        name: Name of the agent
-        capabilities: List of task types this agent can handle
-        behavior: Function that processes tasks and returns results
-        description: Description of what this agent does
-    """
-    def __init__(self, 
-                 name: str, 
-                 capabilities: List[str], 
-                 behavior: Callable[[Dict[str, Any]], Dict[str, Any]],
-                 description: str = ""):
+    def __init__(self, name: str, capabilities: list, behavior: Callable, description: str = ""):
         """
-        Initialize an expert agent.
+        Initialize an expert agent
         
         Args:
-            name: Name of the agent
-            capabilities: List of task types this agent can handle
-            behavior: Function that processes tasks and returns results
-            description: Description of what this agent does
+            name: Name of the expert
+            capabilities: List of capabilities/skills this expert has
+            behavior: Function that implements the expert's behavior
+            description: Description of what this expert does
         """
         self.name = name
         self.capabilities = capabilities
         self.behavior = behavior
         self.description = description
-        logger.info(f"Initialized expert agent '{name}' with capabilities: {capabilities}")
     
-    def can_handle(self, task_type: str) -> bool:
-        """Check if this agent can handle a given task type"""
-        return task_type in self.capabilities
-    
-    def process_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Process a task and return the result.
+        Execute the expert's behavior on a task
         
         Args:
-            task: Task data dictionary
+            task: Task dictionary with description and data
             
         Returns:
-            Dictionary with processing result
+            Result dictionary with status and output
         """
-        logger.info(f"Agent '{self.name}' processing task: {task.get('description', 'Unknown')}")
         try:
             result = self.behavior(task)
-            return {
-                "status": "completed",
-                "agent_name": self.name,
-                "task_id": task.get("id"),
-                "result": result
-            }
+            return result
         except Exception as e:
-            logger.error(f"Error in agent '{self.name}': {str(e)}", exc_info=True)
             return {
                 "status": "error",
-                "agent_name": self.name,
-                "task_id": task.get("id"),
-                "error": str(e)
+                "message": f"Error executing {self.name}: {str(e)}"
             }
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert agent to dictionary representation"""
-        return {
-            "name": self.name,
-            "capabilities": self.capabilities,
-            "description": self.description
-        }

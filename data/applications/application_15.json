@@ -1,26 +1,23 @@
 {
-  "personalInformation": {
-    "firstName": "Daniel",
-    "lastName": "Brown",
-    "dateOfBirth": "1969-03-30",
-    "address": {},
-    "contactDetails": {}
-  },
-  "financialInformation": {
-    "annualIncome": 28000,
-    "employmentStatus": "Retired",
-    "existingDebt": 18000
+  "personalDetails": {
+    "name": "Applicant 5017",
+    "age": 51,
+    "address": "123 Main St",
+    "phoneNumber": "555-1234"
   },
   "creditHistory": {
-    "creditScore": 600,
-    "paymentHistory": "Frequent late payments"
+    "creditScore": 723,
+    "creditTier": "Good",
+    "paymentHistory": "Poor",
+    "creditUtilization": 38
   },
-  "requestedCreditDetails": {
-    "cardType": "Gold",
-    "creditLimit": 4000,
-    "requestedCreditLimit": 0
-  },
-  "additionalInformation": {
-    "consentToCreditCheck": true
+  "financialInformation": {
+    "annualIncome": 60285,
+    "incomeTier": "Medium",
+    "existingDebt": 31602,
+    "debtRatio": 0.5242226741277004,
+    "debtTier": "Medium",
+    "employmentStatus": "Unemployed",
+    "monthlyExpenses": 1506
   }
 }
