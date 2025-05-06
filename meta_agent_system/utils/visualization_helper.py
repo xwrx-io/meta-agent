@@ -25,48 +25,40 @@ def get_nested_value(obj, path):
     return value
 
 def generate_accuracy_visualization():
-    """Generate visualization of accuracy improvement over iterations"""
-    # Load validation history
+    """Generate a simple visualization of accuracy improvement over iterations."""
     history_file = os.path.join(RESULTS_DIR, "validation_history.json")
     if not os.path.exists(history_file):
-        logger.error("Validation history file not found")
         return None
     
-    try:
-        with open(history_file, 'r') as f:
-            validation_history = json.load(f)
-        
-        # Extract iteration numbers and accuracy values
-        iterations = [entry.get("iteration", i) for i, entry in enumerate(validation_history)]
-        accuracy_values = [entry.get("accuracy", 0) for entry in validation_history]
-        
-        # Create accuracy plot
-        plt.figure(figsize=(10, 6))
-        plt.plot(iterations, accuracy_values, 'o-', linewidth=2, markersize=8)
-        plt.axhline(y=50, color='r', linestyle='--', alpha=0.5, label='Baseline (50%)')
-        plt.axhline(y=100, color='g', linestyle='--', alpha=0.5, label='Perfect (100%)')
-        
-        plt.title('Accuracy Improvement Over Iterations', fontsize=16)
-        plt.xlabel('Iteration', fontsize=14)
-        plt.ylabel('Accuracy (%)', fontsize=14)
-        plt.grid(True, alpha=0.3)
-        plt.legend()
-        
-        # Set y-axis limits
-        plt.ylim(0, 105)
-        
-        # Save plot
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(RESULTS_DIR, f"accuracy_improvement_{timestamp}.png")
-        plt.savefig(output_file)
-        plt.close()
-        
-        logger.info(f"Generated accuracy visualization: {output_file}")
-        return output_file
+    # Load validation history
+    with open(history_file, 'r') as f:
+        validation_history = json.load(f)
     
-    except Exception as e:
-        logger.error(f"Error generating accuracy visualization: {str(e)}")
+    if not validation_history:
         return None
+    
+    # Extract data
+    iterations = [entry.get("iteration", i) for i, entry in enumerate(validation_history)]
+    accuracies = [entry.get("accuracy", 0) for entry in validation_history]
+    
+    # Create visualization
+    plt.figure(figsize=(10, 6))
+    plt.plot(iterations, accuracies, marker='o', linestyle='-', color='blue')
+    plt.axhline(y=100, color='green', linestyle='--', alpha=0.7, label='Target Accuracy')
+    
+    plt.title('Credit Card Approval Rule Accuracy Improvement')
+    plt.xlabel('Iteration')
+    plt.ylabel('Accuracy (%)')
+    plt.grid(True, alpha=0.3)
+    plt.ylim(0, 105)
+    
+    # Save visualization
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    viz_file = os.path.join(RESULTS_DIR, f"accuracy_improvement_{timestamp}.png")
+    plt.savefig(viz_file)
+    plt.close()
+    
+    return viz_file
 
 def generate_feature_comparison(applications, hidden_approvals):
     """Generate visualizations comparing features between approved and declined applications"""

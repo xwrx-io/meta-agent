@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import time
 from dotenv import load_dotenv
 from meta_agent_system.utils.logger import get_logger
 from meta_agent_system.utils.helpers import save_json, get_timestamp, ensure_directory_exists
@@ -10,24 +11,21 @@ from meta_agent_system.experts.validator import create_validator
 from meta_agent_system.experts.rule_analyzer import create_rule_analyzer
 from meta_agent_system.experts.rule_refiner import create_rule_refiner
 from meta_agent_system.utils.visualization_helper import generate_accuracy_visualization
-import time
 import matplotlib.pyplot as plt
 from datetime import datetime
-import os
 from meta_agent_system.experts.misclassification_analyzer import analyze_misclassifications
 
 # Configure logging
 logger = get_logger(__name__)
 
 def main():
-    """Main entry point for credit card rule discovery system"""
+    """Credit card rule discovery system main entry point"""
     # Load environment variables
     load_dotenv()
     
     # Ensure OpenAI API key is set
     if not os.getenv("OPENAI_API_KEY"):
         print("ERROR: OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.")
-        print("You can create a .env file with OPENAI_API_KEY=your-key-here")
         sys.exit(1)
     
     print("\n=== Credit Card Rule Discovery System ===\n")
@@ -36,40 +34,35 @@ def main():
     # Initialize OpenAI client
     openai_client = OpenAIClient()
     
-    # Create our core experts
+    # Create expert components
     validator = create_validator(openai_client)
     rule_analyzer = create_rule_analyzer(openai_client)
     rule_refiner = create_rule_refiner(openai_client)
     
     # Ensure results directory exists
-    ensure_directory_exists(RESULTS_DIR)
+    os.makedirs(RESULTS_DIR, exist_ok=True)
     
-    # Define maximum iterations
-    max_iterations = 10
-    
-    print("\nStarting rule discovery process...\n")
-    
-    # Initial ruleset - starting point
+    # Initial ruleset
     initial_ruleset = {
-        "logic": "all",
+        "logic": "any",
         "rules": [
             {
-                "field": "creditHistory.creditScore",
-                "condition": "greater_than",
-                "threshold": 650
+                "field": "creditHistory.creditTier",
+                "condition": "equals",
+                "threshold": "Excellent"
             },
             {
-                "field": "financialInformation.annualIncome",
-                "condition": "greater_than",
-                "threshold": 30000
+                "field": "financialInformation.incomeTier",
+                "condition": "equals",
+                "threshold": "Very High"
             },
             {
-                "field": "creditHistory.paymentHistory",
-                "condition": "in",
-                "values": ["Excellent", "Good"]
+                "field": "financialInformation.debtTier",
+                "condition": "equals",
+                "threshold": "Very Low"
             }
         ],
-        "description": "Initial ruleset based on common credit card approval factors",
+        "description": "Initial ruleset using basic tier factors",
         "timestamp": int(time.time()),
         "iteration": 0
     }
@@ -79,13 +72,15 @@ def main():
     with open(ruleset_file, 'w') as f:
         json.dump(initial_ruleset, f, indent=2)
     
-    # Initialize variables to track progress
+    # Track progress
     current_accuracy = 0
     best_accuracy = 0
     best_ruleset = initial_ruleset
     best_iteration = 0
-    consecutive_decreases = 0
+    max_iterations = 10
     iteration = 0
+    
+    print("\nStarting rule discovery process...\n")
     
     # Main iteration loop
     while current_accuracy < 100 and iteration < max_iterations:
@@ -106,70 +101,43 @@ def main():
         if current_accuracy > best_accuracy:
             best_accuracy = current_accuracy
             best_iteration = iteration
-            best_ruleset = None  # Will load from file
             
-            # Save a backup of this best ruleset
-            try:
-                with open(ruleset_file, 'r') as f:
-                    best_ruleset = json.load(f)
+            # Save best ruleset
+            with open(ruleset_file, 'r') as f:
+                best_ruleset = json.load(f)
+            
+            best_ruleset_file = os.path.join(RESULTS_DIR, f"best_ruleset_iteration_{iteration}.json")
+            with open(best_ruleset_file, 'w') as f:
+                json.dump(best_ruleset, f, indent=2)
                 
-                best_ruleset_file = os.path.join(RESULTS_DIR, f"best_ruleset_iteration_{iteration}.json")
-                with open(best_ruleset_file, 'w') as f:
-                    json.dump(best_ruleset, f, indent=2)
-                    
-                print(f"New best accuracy: {best_accuracy:.2f}%")
-            except Exception as e:
-                logger.error(f"Error saving best ruleset: {str(e)}")
-        else:
-            consecutive_decreases += 1
-        
-        # New step: Perform detailed misclassification analysis
-        print("Analyzing misclassifications in depth...")
-        detailed_analysis = analyze_misclassifications()
-        print(f"Found {len(detailed_analysis)} misclassified applications to focus on")
+            print(f"New best accuracy: {best_accuracy:.2f}%")
         
         # If we've reached 100% accuracy, break the loop
         if current_accuracy == 100:
-            print("\nPerfect accuracy achieved! Ruleset correctly classifies all applications.")
+            print("\nPerfect accuracy achieved!")
             break
         
-        # Step 2: Analyze applications to find patterns
+        # Step 2: Analyze patterns
         print("Analyzing application patterns...")
-        analysis_result = rule_analyzer.execute({
+        rule_analyzer.execute({
             "description": "Analyze credit card applications for patterns",
             "data": {"iteration": iteration}
         })
         
-        # Step 3: Refine rules based on validation and analysis
+        # Step 3: Refine rules
         print("Refining ruleset...")
         refinement_result = rule_refiner.execute({
             "description": "Refine credit card approval rules",
-            "data": {"iteration": iteration, "consecutive_decreases": consecutive_decreases}
+            "data": {"iteration": iteration}
         })
         
-        # Print refinement summary
+        # Report on new ruleset
         ruleset = refinement_result.get("ruleset", {})
+        nested_rule_count = sum(1 for rule in ruleset.get("rules", []) 
+                               if isinstance(rule, dict) and "rules" in rule)
         
-        # Check if the ruleset has nested rules (better logging)
-        nested_rule_count = 0
-        for rule in ruleset.get("rules", []):
-            if "rules" in rule and isinstance(rule.get("rules"), list):
-                nested_rule_count += 1
-        
-        # Better reporting of rule complexity
-        if nested_rule_count > 0:
-            print(f"Rules refined. New ruleset has {len(ruleset.get('rules', []))} rules " +
-                  f"with '{ruleset.get('logic', 'all')}' logic and {nested_rule_count} nested rule groups.")
-        else:
-            print(f"Rules refined. New ruleset has {len(ruleset.get('rules', []))} rules " +
-                  f"with '{ruleset.get('logic', 'all')}' logic.")
-        
-        # Reset consecutive decreases counter if we saw an improvement
-        if current_accuracy > validation_result.get("previous_accuracy", 0):
-            consecutive_decreases = 0
-        
-        # Optional: Add a small pause between iterations
-        time.sleep(1)
+        print(f"Rules refined. New ruleset has {len(ruleset.get('rules', []))} rules " +
+              f"with '{ruleset.get('logic', 'all')}' logic and {nested_rule_count} nested rule groups.")
     
     # Summarize results
     print("\n=== Rule Discovery Summary ===")
@@ -177,39 +145,47 @@ def main():
     print(f"Final accuracy: {current_accuracy:.2f}%")
     print(f"Best accuracy: {best_accuracy:.2f}% (iteration {best_iteration})")
     
-    # Generate visualization
+    # Generate accuracy visualization
     viz_file = generate_accuracy_visualization()
     if viz_file:
         print(f"Accuracy visualization saved to: {viz_file}")
     
-    # Load final ruleset - use best ruleset if available and better than final
-    final_ruleset = {}
-    if best_ruleset and best_accuracy > current_accuracy:
-        final_ruleset = best_ruleset
-        # Also save it as the final ruleset
+    # Use best ruleset if better than final
+    if best_accuracy > current_accuracy:
         with open(ruleset_file, 'w') as f:
             json.dump(best_ruleset, f, indent=2)
-        print(f"Restored best ruleset from iteration {best_iteration} (accuracy: {best_accuracy:.2f}%)")
-    else:
-        try:
-            with open(ruleset_file, 'r') as f:
-                final_ruleset = json.load(f)
-        except Exception as e:
-            logger.error(f"Error loading final ruleset: {str(e)}")
+        print(f"Restored best ruleset from iteration {best_iteration}")
     
     # Print final ruleset
     print("\nFinal Credit Card Approval Rules:")
+    final_ruleset = best_ruleset if best_accuracy > current_accuracy else ruleset
     print(f"Logic: {final_ruleset.get('logic', 'all').upper()}")
     print(f"Rule count: {len(final_ruleset.get('rules', []))}")
-    
-    for i, rule in enumerate(final_ruleset.get("rules", [])):
-        print_rule(rule)
-    
-    # Print ruleset description
+    print_rules(final_ruleset.get("rules", []))
     print("\nRuleset rationale:")
     print(final_ruleset.get("description", "No description provided"))
-    
     print("\nRule discovery process complete!")
+
+def print_rules(rules, indent=0):
+    """Print rules in a readable format with indentation for nested rules"""
+    for rule in rules:
+        prefix = "  " * indent
+        
+        if "rules" in rule:
+            # Nested rule group
+            print(f"{prefix}Rule Group ({rule.get('logic', 'all').upper()}):")
+            print_rules(rule.get("rules", []), indent + 1)
+        elif "field" in rule:
+            # Standard rule
+            field = rule.get("field", "").split(".")[-1]  # Just the field name
+            condition = rule.get("condition", "")
+            
+            if "threshold" in rule:
+                value = rule.get("threshold")
+                print(f"{prefix}• {field} {condition} {value}")
+            elif "values" in rule:
+                values = rule.get("values", [])
+                print(f"{prefix}• {field} {condition} {values}")
 
 def explore_applications():
     """Utility function to explore the application data"""
@@ -249,41 +225,6 @@ def explore_applications():
             print(json.dumps(sample_app, indent=2))
         except Exception as e:
             print(f"Error loading sample application: {str(e)}")
-
-def print_rule(rule, indent=0):
-    """Print a rule with proper indentation for nested rules"""
-    indent_str = "  " * indent
-    
-    # Handle nested rules
-    if "rules" in rule and "logic" in rule:
-        print(f"{indent_str}Rule Group ({rule['logic'].upper()}):")
-        for sub_rule in rule["rules"]:
-            print_rule(sub_rule, indent + 1)
-        return
-    
-    # Handle ratio rules
-    if rule.get("type") == "ratio":
-        print(f"{indent_str}Rule: {rule.get('numerator_field')} to {rule.get('denominator_field')} ratio {rule.get('condition')} {rule.get('threshold')}")
-        return
-    
-    # Handle range rules
-    if rule.get("type") == "range":
-        print(f"{indent_str}Rule: {rule.get('field')} between {rule.get('min')} and {rule.get('max')}")
-        return
-    
-    # Handle standard rules
-    field = rule.get("field", "")
-    condition = rule.get("condition", "")
-    threshold = rule.get("threshold")
-    values = rule.get("values", [])
-    
-    rule_str = f"{indent_str}Rule: {field} {condition}"
-    if threshold is not None:
-        rule_str += f" {threshold}"
-    elif values:
-        rule_str += f" {values}"
-    
-    print(rule_str)
 
 if __name__ == "__main__":
     main()

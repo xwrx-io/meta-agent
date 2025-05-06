@@ -1,38 +1,23 @@
-from typing import Dict, Any, Callable
+from typing import Dict, Any, Callable, List
 
 class ExpertAgent:
-    """A simplified expert agent that performs a specialized task"""
+    """Simple expert agent that executes a specific behavior function."""
     
-    def __init__(self, name: str, capabilities: list, behavior: Callable, description: str = ""):
-        """
-        Initialize an expert agent
-        
-        Args:
-            name: Name of the expert
-            capabilities: List of capabilities/skills this expert has
-            behavior: Function that implements the expert's behavior
-            description: Description of what this expert does
-        """
+    def __init__(self, name: str, behavior: Callable, capabilities: List[str] = None, description: str = ""):
+        """Initialize the expert agent."""
         self.name = name
-        self.capabilities = capabilities
         self.behavior = behavior
+        self.capabilities = capabilities or []
         self.description = description
     
     def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Execute the expert's behavior on a task
-        
-        Args:
-            task: Task dictionary with description and data
-            
-        Returns:
-            Result dictionary with status and output
-        """
-        try:
-            result = self.behavior(task)
-            return result
-        except Exception as e:
-            return {
-                "status": "error",
-                "message": f"Error executing {self.name}: {str(e)}"
-            }
+        """Execute the expert's behavior on a task."""
+        return self.behavior(task)
+    
+    def has_capability(self, capability: str) -> bool:
+        """Check if the expert has a specific capability."""
+        return capability in self.capabilities
+    
+    def __str__(self) -> str:
+        """String representation of the expert."""
+        return f"{self.name}: {self.description}"

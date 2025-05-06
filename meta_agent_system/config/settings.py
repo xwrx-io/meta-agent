@@ -1,19 +1,24 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
-# OpenAI API settings
+# API settings
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gpt-4o")
+
+# File paths
+BASE_DIR = os.path.dirname(os.getenv("BASE_DIR", os.path.dirname(os.path.abspath(__file__))))
+APPLICATIONS_DIR = os.path.join(os.path.dirname(BASE_DIR), "data/applications")
+RESULTS_DIR = os.path.join(os.path.dirname(BASE_DIR), "data/results")
+
+# Logging settings
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 # Meta agent settings
 MAX_ITERATIONS = int(os.getenv("MAX_ITERATIONS", "20"))
 DEFAULT_TASK_PRIORITY = 5
-
-# Logging settings
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 # Task types
 TASK_TYPES = {
@@ -40,8 +45,6 @@ EXPERT_CAPABILITIES = {
 # Data paths
 DATA_DIR = "data"
 SCHEMA_DIR = os.path.join(DATA_DIR, "schema")
-APPLICATIONS_DIR = os.path.join(DATA_DIR, "applications")
-RESULTS_DIR = os.path.join(DATA_DIR, "results")
 
 # Create directories if they don't exist
 for directory in [APPLICATIONS_DIR, SCHEMA_DIR, RESULTS_DIR]:
