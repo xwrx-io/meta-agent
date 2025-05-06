@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 7175",
+    "age": 28,
+    "address": "927 Main St",
+    "phoneNumber": "555-8195",
+    "yearsAtAddress": 19
+  },
+  "creditHistory": {
+    "creditScore": 836,
+    "creditTier": "Excellent",
+    "paymentHistory": "Fair",
+    "creditUtilization": 57,
+    "creditAgeYears": 11,
+    "recentInquiries": 1
+  },
+  "financialInformation": {
+    "annualIncome": 93315,
+    "monthlyIncome": 7776,
+    "incomeTier": "High",
+    "existingDebt": 13339,
+    "debtRatio": 0.1429534912465176,
+    "debtTier": "Very Low",
+    "employmentStatus": "Contract",
+    "yearsEmployed": 13,
+    "monthlyExpenses": 3744,
+    "savings": 81939
+  }
+}

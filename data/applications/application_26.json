@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 1678",
+    "age": 22,
+    "address": "887 Main St",
+    "phoneNumber": "555-4927",
+    "yearsAtAddress": 1
+  },
+  "creditHistory": {
+    "creditScore": 752,
+    "creditTier": "Very Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 41,
+    "creditAgeYears": 20,
+    "recentInquiries": 0
+  },
+  "financialInformation": {
+    "annualIncome": 43814,
+    "monthlyIncome": 3651,
+    "incomeTier": "Medium",
+    "existingDebt": 26074,
+    "debtRatio": 0.5951152731917753,
+    "debtTier": "Medium",
+    "employmentStatus": "Unemployed",
+    "yearsEmployed": 15,
+    "monthlyExpenses": 2706,
+    "savings": 23170
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 2539",
+    "age": 73,
+    "address": "406 Main St",
+    "phoneNumber": "555-5364",
+    "yearsAtAddress": 7
+  },
+  "creditHistory": {
+    "creditScore": 732,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 81,
+    "creditAgeYears": 23,
+    "recentInquiries": 7
+  },
+  "financialInformation": {
+    "annualIncome": 33475,
+    "monthlyIncome": 2789,
+    "incomeTier": "Low",
+    "existingDebt": 16581,
+    "debtRatio": 0.49532528374464446,
+    "debtTier": "Medium",
+    "employmentStatus": "Unemployed",
+    "yearsEmployed": 10,
+    "monthlyExpenses": 2304,
+    "savings": 17928
+  }
+}

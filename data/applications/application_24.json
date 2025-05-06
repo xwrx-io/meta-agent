@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 1902",
+    "age": 50,
+    "address": "171 Main St",
+    "phoneNumber": "555-1596",
+    "yearsAtAddress": 2
+  },
+  "creditHistory": {
+    "creditScore": 657,
+    "creditTier": "Good",
+    "paymentHistory": "Excellent",
+    "creditUtilization": 25,
+    "creditAgeYears": 13,
+    "recentInquiries": 7
+  },
+  "financialInformation": {
+    "annualIncome": 63028,
+    "monthlyIncome": 5252,
+    "incomeTier": "Medium",
+    "existingDebt": 23186,
+    "debtRatio": 0.36788009687839607,
+    "debtTier": "Medium",
+    "employmentStatus": "Self-employed",
+    "yearsEmployed": 5,
+    "monthlyExpenses": 2984,
+    "savings": 17961
+  }
+}

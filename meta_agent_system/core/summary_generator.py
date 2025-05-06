@@ -282,7 +282,8 @@ Application #X: [Decision rationale in one clear sentence]
         response = openai_client.generate(
             prompt=prompt,
             system_message="You are a Credit Card Analyst who explains application decisions clearly and concisely.",
-            temperature=0.3
+            temperature=0.3,
+            expert_name="Summary Generator"
         )
         
         # Parse LLM response to extract rationales

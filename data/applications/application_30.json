@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 8563",
+    "age": 39,
+    "address": "774 Main St",
+    "phoneNumber": "555-1786",
+    "yearsAtAddress": 7
+  },
+  "creditHistory": {
+    "creditScore": 578,
+    "creditTier": "Very Poor",
+    "paymentHistory": "Fair",
+    "creditUtilization": 76,
+    "creditAgeYears": 8,
+    "recentInquiries": 7
+  },
+  "financialInformation": {
+    "annualIncome": 66464,
+    "monthlyIncome": 5538,
+    "incomeTier": "Medium",
+    "existingDebt": 25234,
+    "debtRatio": 0.3796719695196498,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "yearsEmployed": 11,
+    "monthlyExpenses": 3791,
+    "savings": 37133
+  }
+}

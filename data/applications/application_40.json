@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 7633",
+    "age": 35,
+    "address": "637 Main St",
+    "phoneNumber": "555-4771",
+    "yearsAtAddress": 7
+  },
+  "creditHistory": {
+    "creditScore": 734,
+    "creditTier": "Very Good",
+    "paymentHistory": "Excellent",
+    "creditUtilization": 55,
+    "creditAgeYears": 11,
+    "recentInquiries": 10
+  },
+  "financialInformation": {
+    "annualIncome": 80486,
+    "monthlyIncome": 6707,
+    "incomeTier": "High",
+    "existingDebt": 22624,
+    "debtRatio": 0.2810930859766612,
+    "debtTier": "Low",
+    "employmentStatus": "Employed",
+    "yearsEmployed": 11,
+    "monthlyExpenses": 4265,
+    "savings": 8397
+  }
+}

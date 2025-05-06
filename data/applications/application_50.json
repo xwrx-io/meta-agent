@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 6156",
+    "age": 28,
+    "address": "721 Main St",
+    "phoneNumber": "555-7203",
+    "yearsAtAddress": 6
+  },
+  "creditHistory": {
+    "creditScore": 630,
+    "creditTier": "Poor",
+    "paymentHistory": "Good",
+    "creditUtilization": 22,
+    "creditAgeYears": 5,
+    "recentInquiries": 0
+  },
+  "financialInformation": {
+    "annualIncome": 46661,
+    "monthlyIncome": 3888,
+    "incomeTier": "Medium",
+    "existingDebt": 21973,
+    "debtRatio": 0.4709155757240973,
+    "debtTier": "Medium",
+    "employmentStatus": "Unemployed",
+    "yearsEmployed": 10,
+    "monthlyExpenses": 2285,
+    "savings": 4958
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 7251",
+    "age": 71,
+    "address": "479 Main St",
+    "phoneNumber": "555-1816",
+    "yearsAtAddress": 7
+  },
+  "creditHistory": {
+    "creditScore": 759,
+    "creditTier": "Excellent",
+    "paymentHistory": "Good",
+    "creditUtilization": 79,
+    "creditAgeYears": 8,
+    "recentInquiries": 0
+  },
+  "financialInformation": {
+    "annualIncome": 63005,
+    "monthlyIncome": 5250,
+    "incomeTier": "Medium",
+    "existingDebt": 24596,
+    "debtRatio": 0.39039522731850584,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "yearsEmployed": 9,
+    "monthlyExpenses": 3215,
+    "savings": 42138
+  }
+}

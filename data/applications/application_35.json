@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 3838",
+    "age": 28,
+    "address": "920 Main St",
+    "phoneNumber": "555-6326",
+    "yearsAtAddress": 18
+  },
+  "creditHistory": {
+    "creditScore": 686,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 72,
+    "creditAgeYears": 9,
+    "recentInquiries": 9
+  },
+  "financialInformation": {
+    "annualIncome": 159991,
+    "monthlyIncome": 13332,
+    "incomeTier": "Very High",
+    "existingDebt": 81173,
+    "debtRatio": 0.5073646951907423,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "yearsEmployed": 12,
+    "monthlyExpenses": 3179,
+    "savings": 32320
+  }
+}

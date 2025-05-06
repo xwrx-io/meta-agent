@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 1164",
+    "age": 21,
+    "address": "660 Main St",
+    "phoneNumber": "555-7938",
+    "yearsAtAddress": 20
+  },
+  "creditHistory": {
+    "creditScore": 572,
+    "creditTier": "Very Poor",
+    "paymentHistory": "Fair",
+    "creditUtilization": 42,
+    "creditAgeYears": 6,
+    "recentInquiries": 0
+  },
+  "financialInformation": {
+    "annualIncome": 53331,
+    "monthlyIncome": 4444,
+    "incomeTier": "Medium",
+    "existingDebt": 16813,
+    "debtRatio": 0.3152616834883898,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "yearsEmployed": 3,
+    "monthlyExpenses": 1376,
+    "savings": 18360
+  }
+}

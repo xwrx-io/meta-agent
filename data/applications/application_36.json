@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 8766",
+    "age": 65,
+    "address": "992 Main St",
+    "phoneNumber": "555-3760",
+    "yearsAtAddress": 3
+  },
+  "creditHistory": {
+    "creditScore": 704,
+    "creditTier": "Good",
+    "paymentHistory": "Good",
+    "creditUtilization": 44,
+    "creditAgeYears": 17,
+    "recentInquiries": 8
+  },
+  "financialInformation": {
+    "annualIncome": 58479,
+    "monthlyIncome": 4873,
+    "incomeTier": "Medium",
+    "existingDebt": 41577,
+    "debtRatio": 0.7109783718471686,
+    "debtTier": "High",
+    "employmentStatus": "Employed",
+    "yearsEmployed": 3,
+    "monthlyExpenses": 4715,
+    "savings": 17597
+  }
+}

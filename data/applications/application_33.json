@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 3721",
+    "age": 45,
+    "address": "759 Main St",
+    "phoneNumber": "555-5006",
+    "yearsAtAddress": 10
+  },
+  "creditHistory": {
+    "creditScore": 505,
+    "creditTier": "Very Poor",
+    "paymentHistory": "Poor",
+    "creditUtilization": 38,
+    "creditAgeYears": 16,
+    "recentInquiries": 3
+  },
+  "financialInformation": {
+    "annualIncome": 109417,
+    "monthlyIncome": 9118,
+    "incomeTier": "Very High",
+    "existingDebt": 45688,
+    "debtRatio": 0.4175660380166317,
+    "debtTier": "Medium",
+    "employmentStatus": "Unemployed",
+    "yearsEmployed": 11,
+    "monthlyExpenses": 2239,
+    "savings": 55727
+  }
+}

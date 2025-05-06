@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 6425",
+    "age": 31,
+    "address": "905 Main St",
+    "phoneNumber": "555-3972",
+    "yearsAtAddress": 12
+  },
+  "creditHistory": {
+    "creditScore": 624,
+    "creditTier": "Poor",
+    "paymentHistory": "Fair",
+    "creditUtilization": 43,
+    "creditAgeYears": 21,
+    "recentInquiries": 9
+  },
+  "financialInformation": {
+    "annualIncome": 35074,
+    "monthlyIncome": 2922,
+    "incomeTier": "Low",
+    "existingDebt": 20464,
+    "debtRatio": 0.5834637354439545,
+    "debtTier": "Medium",
+    "employmentStatus": "Part-time",
+    "yearsEmployed": 13,
+    "monthlyExpenses": 1302,
+    "savings": 6988
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 7186",
+    "age": 73,
+    "address": "520 Main St",
+    "phoneNumber": "555-8790",
+    "yearsAtAddress": 1
+  },
+  "creditHistory": {
+    "creditScore": 848,
+    "creditTier": "Excellent",
+    "paymentHistory": "Good",
+    "creditUtilization": 55,
+    "creditAgeYears": 5,
+    "recentInquiries": 8
+  },
+  "financialInformation": {
+    "annualIncome": 53963,
+    "monthlyIncome": 4496,
+    "incomeTier": "Medium",
+    "existingDebt": 20702,
+    "debtRatio": 0.3836492652981871,
+    "debtTier": "Medium",
+    "employmentStatus": "Employed",
+    "yearsEmployed": 15,
+    "monthlyExpenses": 2616,
+    "savings": 59303
+  }
+}

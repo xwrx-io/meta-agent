@@ -3,11 +3,16 @@ import os
 from typing import Dict, Any, List
 from meta_agent_system.utils.logger import get_logger
 from meta_agent_system.config.settings import APPLICATIONS_DIR, RESULTS_DIR
+from meta_agent_system.llm.openai_client import OpenAIClient
 
 logger = get_logger(__name__)
 
-def analyze_misclassifications():
+def analyze_misclassifications(llm_client=None):
     """Analyze misclassified applications in depth to provide targeted feedback"""
+    # Initialize OpenAI client if not passed in
+    if llm_client is None:
+        llm_client = OpenAIClient()
+    
     # Load necessary data
     with open(os.path.join(RESULTS_DIR, "validation_diagnostics.json"), 'r') as f:
         diagnostics = json.load(f)
@@ -134,6 +139,41 @@ def analyze_misclassifications():
                 "count": persistent_misclassifications[app_id].get("misclassification_count", 0),
                 "iterations": persistent_misclassifications[app_id].get("iterations", [])
             }
+        
+        # Get deeper LLM analysis if significant misclassification
+        if app_id in persistent_misclassifications and persistent_misclassifications[app_id].get("misclassification_count", 0) > 1:
+            # Create a prompt for the LLM
+            prompt = f"""
+            I need a detailed analysis of why this credit card application is being misclassified.
+            
+            Application details:
+            - Credit tier: {credit_tier}
+            - Payment history: {payment_history}
+            - Income tier: {income_tier}
+            - Debt tier: {debt_tier}
+            - Employment: {employment}
+            
+            This application is being persistently misclassified. It should be {analysis['expected']} but is being {analysis['actual']}.
+            
+            Rule analysis:
+            - Rules failed: {len(rules_failed)}
+            - Rules passed: {len(rules_passed)}
+            
+            Please provide a detailed explanation of potential rule improvements that could fix this misclassification.
+            """
+            
+            system_message = "You are a Credit Card Approval Expert that helps identify patterns and recommends rule improvements."
+            
+            # Get LLM analysis
+            llm_analysis = llm_client.generate(
+                prompt=prompt,
+                system_message=system_message,
+                temperature=0.3,
+                expert_name="Misclassification Analyzer"
+            )
+            
+            # Add LLM analysis to the detailed analysis
+            analysis["llm_analysis"] = llm_analysis
         
         detailed_analysis.append(analysis)
     

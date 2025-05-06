@@ -38,7 +38,8 @@ Focus on identifying:
             llm_response = llm_client.generate(
                 prompt=analysis_prompt,
                 system_message=system_prompt,
-                temperature=0.3
+                temperature=0.3,
+                expert_name="Rule Analyzer"
             )
             
             # Save analysis results

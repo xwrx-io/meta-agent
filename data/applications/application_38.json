@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 3070",
+    "age": 63,
+    "address": "541 Main St",
+    "phoneNumber": "555-1271",
+    "yearsAtAddress": 16
+  },
+  "creditHistory": {
+    "creditScore": 755,
+    "creditTier": "Very Good",
+    "paymentHistory": "Excellent",
+    "creditUtilization": 55,
+    "creditAgeYears": 23,
+    "recentInquiries": 7
+  },
+  "financialInformation": {
+    "annualIncome": 77341,
+    "monthlyIncome": 6445,
+    "incomeTier": "High",
+    "existingDebt": 55942,
+    "debtRatio": 0.7233170217375167,
+    "debtTier": "High",
+    "employmentStatus": "Contract",
+    "yearsEmployed": 3,
+    "monthlyExpenses": 3685,
+    "savings": 34397
+  }
+}

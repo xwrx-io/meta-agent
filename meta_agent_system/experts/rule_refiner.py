@@ -57,7 +57,8 @@ Look for SIMPLE, CLEAR PATTERNS in the data!
             prompt=prompt,
             system_message=system_prompt,
             temperature=0.2,
-            use_cache=False
+            use_cache=False,
+            expert_name="Rule Refiner"
         )
         
         # Process LLM response

@@ -1,0 +1,29 @@
+{
+  "personalDetails": {
+    "name": "Applicant 5559",
+    "age": 74,
+    "address": "317 Main St",
+    "phoneNumber": "555-8351",
+    "yearsAtAddress": 1
+  },
+  "creditHistory": {
+    "creditScore": 613,
+    "creditTier": "Poor",
+    "paymentHistory": "Poor",
+    "creditUtilization": 28,
+    "creditAgeYears": 12,
+    "recentInquiries": 9
+  },
+  "financialInformation": {
+    "annualIncome": 49871,
+    "monthlyIncome": 4155,
+    "incomeTier": "Medium",
+    "existingDebt": 10768,
+    "debtRatio": 0.21591776731541082,
+    "debtTier": "Low",
+    "employmentStatus": "Self-employed",
+    "yearsEmployed": 13,
+    "monthlyExpenses": 3892,
+    "savings": 47360
+  }
+}
