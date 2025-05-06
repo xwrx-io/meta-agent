@@ -26,25 +26,11 @@ Focus on identifying:
         """Analyze application data to find patterns"""
         logger.info("Starting pattern analysis")
         
-        # Load required data
-        validation_diagnostics = load_file(os.path.join(RESULTS_DIR, "validation_diagnostics.json"))
-        applications = load_applications()
-        hidden_approvals = load_hidden_approvals()
-        
-        # Prepare data for analysis
-        approved_apps = []
-        declined_apps = []
-        
-        for idx, app in enumerate(applications):
-            app_id = idx + 1
-            key = str(app_id)
-            if hidden_approvals.get(key, False):
-                approved_apps.append(app)
-            else:
-                declined_apps.append(app)
+        # Load data
+        data = load_data()
         
         # Create analysis text for LLM
-        analysis_prompt = create_analysis_prompt(approved_apps, declined_apps, validation_diagnostics)
+        analysis_prompt = create_analysis_prompt(data)
         
         # Get LLM analysis
         try:
@@ -69,22 +55,12 @@ Focus on identifying:
                 "message": f"Error analyzing patterns: {str(e)}"
             }
     
-    def load_file(file_path):
-        """Load a JSON file with error handling"""
-        if not os.path.exists(file_path):
-            return {}
+    def load_data():
+        """Load all necessary data in one function"""
+        data = {}
         
-        try:
-            with open(file_path, 'r') as f:
-                return json.load(f)
-        except Exception as e:
-            logger.error(f"Error loading {file_path}: {str(e)}")
-            return {}
-    
-    def load_applications():
-        """Load applications from files"""
+        # Load applications
         applications = []
-        
         if os.path.exists(APPLICATIONS_DIR):
             app_files = [f for f in os.listdir(APPLICATIONS_DIR) 
                         if f.startswith("application_") and f.endswith(".json")]
@@ -97,25 +73,55 @@ Focus on identifying:
                 except Exception as e:
                     logger.error(f"Error loading application: {str(e)}")
         
-        return applications
-    
-    def load_hidden_approvals():
-        """Load hidden approvals"""
+        data["applications"] = applications
+        
+        # Load hidden approvals
+        hidden_approvals = {}
         file_path = os.path.join(APPLICATIONS_DIR, "hidden_approvals.json")
         if os.path.exists(file_path):
             try:
                 with open(file_path, 'r') as f:
-                    return json.load(f)
+                    hidden_approvals = json.load(f)
             except Exception as e:
                 logger.error(f"Error loading hidden approvals: {str(e)}")
         
-        return {}
+        data["hidden_approvals"] = hidden_approvals
+        
+        # Load validation diagnostics
+        diagnostics = {}
+        diagnostics_file = os.path.join(RESULTS_DIR, "validation_diagnostics.json")
+        if os.path.exists(diagnostics_file):
+            try:
+                with open(diagnostics_file, 'r') as f:
+                    diagnostics = json.load(f)
+            except Exception:
+                pass
+                
+        data["diagnostics"] = diagnostics
+        
+        return data
     
-    def create_analysis_prompt(approved_apps, declined_apps, validation_diagnostics):
+    def create_analysis_prompt(data):
         """Create a prompt for pattern analysis"""
+        applications = data["applications"]
+        hidden_approvals = data["hidden_approvals"]
+        diagnostics = data["diagnostics"]
+        
+        # Separate applications
+        approved_apps = []
+        declined_apps = []
+        
+        for idx, app in enumerate(applications):
+            app_id = idx + 1
+            key = str(app_id)
+            if hidden_approvals.get(key, False):
+                approved_apps.append(app)
+            else:
+                declined_apps.append(app)
+        
         # Extract misclassified applications
         misclassified = []
-        for eval in validation_diagnostics.get("rule_evaluations", []):
+        for eval in diagnostics.get("rule_evaluations", []):
             if not eval.get("correct", True):
                 misclassified.append({
                     "id": eval.get("application_id"),
@@ -124,7 +130,7 @@ Focus on identifying:
                     "data": eval.get("application_data", {})
                 })
         
-        # Calculate approved application statistics
+        # Calculate application statistics
         approved_stats = calculate_stats(approved_apps)
         declined_stats = calculate_stats(declined_apps)
         
@@ -132,7 +138,7 @@ Focus on identifying:
 # Credit Card Application Pattern Analysis
 
 ## Dataset Overview
-- Total Applications: {len(approved_apps) + len(declined_apps)}
+- Total Applications: {len(applications)}
 - Approved: {len(approved_apps)} applications
 - Declined: {len(declined_apps)} applications
 
@@ -145,14 +151,17 @@ Focus on identifying:
 ## Misclassified Applications ({len(misclassified)})
 {format_misclassified(misclassified[:5])}
 
-## Your Tasks
-1. Identify the key patterns that distinguish approved from declined applications
-2. Find the most important thresholds for numeric values
-3. Identify combinations of features that strongly predict approval
-4. Analyze edge cases that are difficult to classify
-5. Suggest specific rules that could better classify the applications
+## Your Task
+Analyze the data above and identify patterns that distinguish approved from declined applications.
+Focus on finding clear rules that can be used to classify applications accurately.
 
-Provide your analysis in clear sections. Focus on actionable insights that can be used to create credit approval rules.
+1. What key factors determine approval or decline?
+2. What thresholds separate approved from declined applications?
+3. Are there any combinations of factors that strongly predict approval?
+4. Which applications are edge cases that might be difficult to classify?
+5. What simple rules would you suggest to improve classification accuracy?
+
+Provide actionable insights that can be used to create better credit card approval rules.
 """
     
     def calculate_stats(applications):

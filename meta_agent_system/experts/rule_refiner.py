@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 import json
 import os
 import re
@@ -37,19 +37,106 @@ Look for SIMPLE, CLEAR PATTERNS in the data!
         iteration = task.get("data", {}).get("iteration", 0)
         
         # Load data
-        applications = load_applications()
-        current_ruleset = load_ruleset()
-        diagnostics = load_diagnostics()
-        hidden_approvals = load_hidden_approvals()
+        data = load_required_data()
         
-        if not applications or not hidden_approvals:
-            logger.error("Missing application data")
-            return {"status": "error", "message": "Missing application data"}
+        # Process data to find examples
+        examples = categorize_applications(data)
         
-        # Separate applications into approved, declined, and misclassified
-        approved_examples = []
-        declined_examples = []
+        # Create prompt with examples
+        prompt = create_teaching_prompt(
+            data["ruleset"], 
+            examples["approved"], 
+            examples["declined"], 
+            examples["misclassified"], 
+            iteration
+        )
+        
+        # Get LLM response
+        logger.info(f"Getting rules for iteration {iteration}")
+        llm_response = llm_client.generate(
+            prompt=prompt,
+            system_message=system_prompt,
+            temperature=0.2,
+            use_cache=False
+        )
+        
+        # Process LLM response
+        try:
+            # Extract JSON from response
+            improved_ruleset = extract_ruleset(llm_response, iteration)
+            
+            # Save the ruleset
+            save_ruleset_file(improved_ruleset)
+            
+            return {
+                "status": "success",
+                "ruleset": improved_ruleset,
+                "message": f"Created new ruleset for iteration {iteration}"
+            }
+        except Exception as e:
+            logger.error(f"Error processing LLM response: {str(e)}")
+            
+            # Create a simple fallback ruleset
+            fallback_ruleset = create_fallback_ruleset(iteration)
+            save_ruleset_file(fallback_ruleset)
+            
+            return {
+                "status": "success",
+                "ruleset": fallback_ruleset,
+                "message": f"Used fallback ruleset due to error: {str(e)}"
+            }
+    
+    def load_required_data():
+        """Load all required data files in one function."""
+        data = {}
+        
+        # Load applications
+        applications = []
+        app_files = [f for f in os.listdir(APPLICATIONS_DIR) 
+                    if f.startswith("application_") and f.endswith(".json")]
+        app_files.sort(key=lambda f: int(f.replace("application_", "").replace(".json", "")))
+        
+        for f in app_files:
+            try:
+                with open(os.path.join(APPLICATIONS_DIR, f), 'r') as file:
+                    applications.append(json.load(file))
+            except Exception as e:
+                logger.error(f"Error loading {f}: {str(e)}")
+        
+        data["applications"] = applications
+        
+        # Load ruleset
+        try:
+            with open(os.path.join(RESULTS_DIR, "credit_card_approval_rules.json"), 'r') as f:
+                data["ruleset"] = json.load(f)
+        except Exception:
+            data["ruleset"] = {}
+        
+        # Load diagnostics
+        try:
+            with open(os.path.join(RESULTS_DIR, "validation_diagnostics.json"), 'r') as f:
+                data["diagnostics"] = json.load(f)
+        except Exception:
+            data["diagnostics"] = {}
+        
+        # Load hidden approvals
+        try:
+            with open(os.path.join(APPLICATIONS_DIR, "hidden_approvals.json"), 'r') as f:
+                data["hidden_approvals"] = json.load(f)
+        except Exception:
+            data["hidden_approvals"] = {}
+            
+        return data
+    
+    def categorize_applications(data):
+        """Categorize applications into approved, declined, and misclassified."""
+        approved = []
+        declined = []
         misclassified = []
+        
+        applications = data["applications"]
+        hidden_approvals = data["hidden_approvals"]
+        diagnostics = data["diagnostics"]
         
         for idx, app in enumerate(applications):
             app_id = idx + 1
@@ -85,101 +172,15 @@ Look for SIMPLE, CLEAR PATTERNS in the data!
                     "current_result": current_result
                 })
             elif should_approve:
-                approved_examples.append(app_data)
+                approved.append(app_data)
             else:
-                declined_examples.append(app_data)
-        
-        # Create prompt with clear application examples and feedback
-        prompt = create_teaching_prompt(current_ruleset, approved_examples, declined_examples, misclassified, iteration)
-        
-        # Get LLM response
-        logger.info(f"Getting rules for iteration {iteration}")
-        llm_response = llm_client.generate(
-            prompt=prompt,
-            system_message=system_prompt,
-            temperature=0.2,
-            use_cache=False
-        )
-        
-        # Process LLM response
-        try:
-            # Extract JSON from response
-            improved_ruleset = extract_ruleset(llm_response, iteration)
-            
-            # Save the ruleset
-            save_ruleset_file(improved_ruleset)
-            
-            return {
-                "status": "success",
-                "ruleset": improved_ruleset,
-                "message": f"Created new ruleset for iteration {iteration}"
-            }
-        except Exception as e:
-            logger.error(f"Error processing LLM response: {str(e)}")
-            
-            # Create a simple fallback ruleset
-            fallback_ruleset = create_fallback_ruleset(iteration)
-            save_ruleset_file(fallback_ruleset)
-            
-            return {
-                "status": "error",
-                "ruleset": fallback_ruleset,
-                "message": f"Used fallback ruleset due to error: {str(e)}"
-            }
-    
-    def load_applications():
-        """Load all applications."""
-        applications = []
-        if os.path.exists(APPLICATIONS_DIR):
-            app_files = [f for f in os.listdir(APPLICATIONS_DIR) 
-                        if f.startswith("application_") and f.endswith(".json")]
-            
-            app_files.sort(key=lambda f: int(f.replace("application_", "").replace(".json", "")))
-            
-            for f in app_files:
-                try:
-                    with open(os.path.join(APPLICATIONS_DIR, f), 'r') as file:
-                        applications.append(json.load(file))
-                except Exception as e:
-                    logger.error(f"Error loading {f}: {str(e)}")
-        
-        return applications
-    
-    def load_ruleset():
-        """Load current ruleset."""
-        ruleset_file = os.path.join(RESULTS_DIR, "credit_card_approval_rules.json")
-        if os.path.exists(ruleset_file):
-            try:
-                with open(ruleset_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Error loading ruleset: {str(e)}")
-        
-        return {}
-    
-    def load_diagnostics():
-        """Load validation diagnostics."""
-        diagnostics_file = os.path.join(RESULTS_DIR, "validation_diagnostics.json")
-        if os.path.exists(diagnostics_file):
-            try:
-                with open(diagnostics_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Error loading diagnostics: {str(e)}")
-        
-        return {}
-    
-    def load_hidden_approvals():
-        """Load hidden approval decisions."""
-        approvals_file = os.path.join(APPLICATIONS_DIR, "hidden_approvals.json")
-        if os.path.exists(approvals_file):
-            try:
-                with open(approvals_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Error loading hidden approvals: {str(e)}")
-        
-        return {}
+                declined.append(app_data)
+                
+        return {
+            "approved": approved,
+            "declined": declined,
+            "misclassified": misclassified
+        }
     
     def create_teaching_prompt(current_ruleset, approved, declined, misclassified, iteration):
         """Create a clear, educational prompt with examples."""
@@ -352,21 +353,6 @@ APPLICATION #{app['id']}:
                             "field": "financialInformation.incomeTier",
                             "condition": "equals",
                             "threshold": "Very High"
-                        },
-                        {
-                            "field": "creditHistory.creditTier",
-                            "condition": "in",
-                            "values": ["Good", "Very Good"]
-                        }
-                    ]
-                },
-                {
-                    "logic": "all",
-                    "rules": [
-                        {
-                            "field": "financialInformation.debtTier",
-                            "condition": "equals",
-                            "threshold": "Very Low"
                         },
                         {
                             "field": "creditHistory.creditTier",

@@ -1,11 +1,11 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 import json
 import os
+from datetime import datetime
 from meta_agent_system.core.expert_agent import ExpertAgent
 from meta_agent_system.llm.openai_client import OpenAIClient
 from meta_agent_system.utils.logger import get_logger
 from meta_agent_system.config.settings import APPLICATIONS_DIR, RESULTS_DIR
-from datetime import datetime
 
 logger = get_logger(__name__)
 
@@ -36,7 +36,7 @@ def evaluate_rule(rule, application):
             return any(sub_results)
         return False
     
-    # Handle special rule types (ratio, range)
+    # Handle special rule types
     if rule.get("type") == "ratio":
         numerator = get_nested_value(application, rule.get("numerator_field", ""))
         denominator = get_nested_value(application, rule.get("denominator_field", ""))
@@ -108,10 +108,11 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
         """Validate ruleset against applications with clear diagnostics"""
         iteration = task.get("data", {}).get("iteration", 0)
         
-        # Load applications, ruleset, and hidden approvals
-        applications = load_applications()
-        ruleset = load_ruleset()
-        hidden_approvals = load_hidden_approvals()
+        # Load data
+        data = load_validation_data()
+        applications = data["applications"]
+        ruleset = data["ruleset"]
+        hidden_approvals = data["hidden_approvals"]
         
         if not applications or not ruleset or not hidden_approvals:
             logger.error("Missing required data for validation")
@@ -125,7 +126,84 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
         logger.info(f"Hidden approvals count: {len(hidden_approvals)}")
         
         # Evaluate each application
-        all_rule_evaluations = []
+        results = evaluate_all_applications(applications, ruleset, hidden_approvals)
+        
+        # Calculate accuracy
+        total_count = len(applications)
+        correct_count = results["correct_count"]
+        calculated_accuracy = (correct_count / total_count * 100) if total_count > 0 else 0
+        
+        # Save diagnostics
+        save_validation_results(ruleset, results, calculated_accuracy, iteration)
+        
+        # Log summary
+        logger.info(f"Approved count: {results['approved_count']}, Declined count: {results['declined_count']}")
+        logger.info(f"Correctly classified: {correct_count} out of {total_count}")
+        logger.info(f"===== END DEBUGGING =====")
+        
+        # Identify edge cases
+        edge_cases = identify_edge_cases(results["evaluations"], ruleset)
+        logger.info(f"Identified {len(edge_cases)} edge cases")
+        
+        return {
+            "status": "success" if calculated_accuracy == 100 else "partial_success",
+            "accuracy": calculated_accuracy,
+            "success": calculated_accuracy == 100,
+            "message": f"Validated ruleset with {calculated_accuracy:.2f}% accuracy",
+            "previous_accuracy": get_previous_accuracy()
+        }
+    
+    def load_validation_data():
+        """Load all validation data in one function."""
+        data = {}
+        
+        # Load applications
+        applications = []
+        if os.path.exists(APPLICATIONS_DIR):
+            app_files = [f for f in os.listdir(APPLICATIONS_DIR) 
+                        if f.startswith("application_") and f.endswith(".json")]
+            
+            app_files.sort(key=lambda f: int(f.replace("application_", "").replace(".json", "")))
+            
+            for f in app_files:
+                file_path = os.path.join(APPLICATIONS_DIR, f)
+                try:
+                    with open(file_path, 'r') as file:
+                        applications.append(json.load(file))
+                except Exception as e:
+                    logger.error(f"Error loading application from {file_path}: {str(e)}")
+        
+        data["applications"] = applications
+        
+        # Load ruleset
+        ruleset_file = os.path.join(RESULTS_DIR, "credit_card_approval_rules.json")
+        if os.path.exists(ruleset_file):
+            try:
+                with open(ruleset_file, 'r') as f:
+                    data["ruleset"] = json.load(f)
+            except Exception as e:
+                logger.error(f"Error loading ruleset: {str(e)}")
+                data["ruleset"] = {}
+        else:
+            data["ruleset"] = {}
+            
+        # Load hidden approvals
+        hidden_approvals_file = os.path.join(APPLICATIONS_DIR, "hidden_approvals.json")
+        if os.path.exists(hidden_approvals_file):
+            try:
+                with open(hidden_approvals_file, 'r') as f:
+                    data["hidden_approvals"] = json.load(f)
+            except Exception as e:
+                logger.error(f"Error loading hidden approvals: {str(e)}")
+                data["hidden_approvals"] = {}
+        else:
+            data["hidden_approvals"] = {}
+            
+        return data
+    
+    def evaluate_all_applications(applications, ruleset, hidden_approvals):
+        """Evaluate all applications against ruleset."""
+        all_evaluations = []
         correct_count = 0
         approved_count = 0
         declined_count = 0
@@ -156,7 +234,11 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
                 })
             
             # Apply ruleset logic
-            approved = logic_type == "any" and any(rule_results) or logic_type == "all" and all(rule_results)
+            approved = False
+            if logic_type == "any":
+                approved = any(rule_results)
+            else:  # all logic
+                approved = all(rule_results)
             
             # Update counters
             if approved:
@@ -176,7 +258,7 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
                 })
             
             # Record complete evaluation for diagnostics
-            all_rule_evaluations.append({
+            all_evaluations.append({
                 "application_id": app_id,
                 "expected": expected_approval,
                 "actual": approved,
@@ -185,76 +267,16 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
                 "application_data": extract_app_data(application)
             })
         
-        # Calculate accuracy
-        total_count = len(applications)
-        calculated_accuracy = (correct_count / total_count * 100) if total_count > 0 else 0
-        
-        # Save diagnostics
-        save_diagnostics(ruleset, all_rule_evaluations, calculated_accuracy, iteration)
-        
-        # Log summary
-        logger.info(f"Approved count: {approved_count}, Declined count: {declined_count}")
-        logger.info(f"Correctly classified: {correct_count} out of {total_count}")
-        logger.info(f"===== END DEBUGGING =====")
-        
-        # Identify edge cases
-        edge_cases = identify_edge_cases(all_rule_evaluations, ruleset)
-        logger.info(f"Identified {len(edge_cases)} edge cases")
-        
         return {
-            "status": "success" if calculated_accuracy == 100 else "partial_success",
-            "accuracy": calculated_accuracy,
-            "success": calculated_accuracy == 100,
-            "message": f"Validated ruleset with {calculated_accuracy:.2f}% accuracy",
-            "previous_accuracy": get_previous_accuracy()
+            "evaluations": all_evaluations,
+            "correct_count": correct_count,
+            "approved_count": approved_count,
+            "declined_count": declined_count,
+            "misclassified": misclassified_apps
         }
     
-    def load_applications():
-        """Load applications from files"""
-        applications = []
-        
-        if os.path.exists(APPLICATIONS_DIR):
-            app_files = [f for f in os.listdir(APPLICATIONS_DIR) 
-                        if f.startswith("application_") and f.endswith(".json")]
-            
-            app_files.sort(key=lambda f: int(f.replace("application_", "").replace(".json", "")))
-            
-            for f in app_files:
-                file_path = os.path.join(APPLICATIONS_DIR, f)
-                try:
-                    with open(file_path, 'r') as file:
-                        applications.append(json.load(file))
-                except Exception as e:
-                    logger.error(f"Error loading application from {file_path}: {str(e)}")
-        
-        return applications
-    
-    def load_ruleset():
-        """Load ruleset to validate"""
-        ruleset_file = os.path.join(RESULTS_DIR, "credit_card_approval_rules.json")
-        if os.path.exists(ruleset_file):
-            try:
-                with open(ruleset_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Error loading ruleset: {str(e)}")
-        
-        return {}
-    
-    def load_hidden_approvals():
-        """Load hidden approvals (ground truth)"""
-        hidden_approvals_file = os.path.join(APPLICATIONS_DIR, "hidden_approvals.json")
-        if os.path.exists(hidden_approvals_file):
-            try:
-                with open(hidden_approvals_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Error loading hidden approvals: {str(e)}")
-        
-        return {}
-    
     def extract_app_data(application):
-        """Extract key application data for diagnostics"""
+        """Extract key application data for diagnostics."""
         return {
             "credit_score": get_nested_value(application, "creditHistory.creditScore"),
             "credit_tier": get_nested_value(application, "creditHistory.creditTier"),
@@ -267,8 +289,8 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
             "employment_status": get_nested_value(application, "financialInformation.employmentStatus")
         }
     
-    def save_diagnostics(ruleset, all_rule_evaluations, accuracy, iteration):
-        """Save diagnostics to files"""
+    def save_validation_results(ruleset, results, accuracy, iteration):
+        """Save all validation results to files."""
         # Save validation results
         validation_results = {
             "accuracy": accuracy,
@@ -277,11 +299,9 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
                     "application_id": eval.get("application_id"),
                     "decision": "approved" if eval.get("actual") else "declined",
                     "correct": eval.get("correct")
-                } for eval in all_rule_evaluations
+                } for eval in results["evaluations"]
             ],
-            "misclassified_applications": [
-                eval for eval in all_rule_evaluations if not eval.get("correct")
-            ]
+            "misclassified_applications": results["misclassified"]
         }
         
         validation_file = os.path.join(RESULTS_DIR, "validation_results.json")
@@ -293,17 +313,17 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
         with open(diagnostics_file, 'w') as f:
             json.dump({
                 "ruleset": ruleset,
-                "rule_evaluations": all_rule_evaluations
+                "rule_evaluations": results["evaluations"]
             }, f, indent=2)
         
         # Update validation history
         update_validation_history(accuracy, len(ruleset.get("rules", [])), iteration)
         
         # Update persistent misclassifications
-        update_persistent_misclassifications(all_rule_evaluations, iteration)
+        update_persistent_misclassifications(results["evaluations"], iteration)
     
     def update_validation_history(accuracy, rule_count, iteration):
-        """Update the validation history file"""
+        """Update the validation history file."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         history_file = os.path.join(RESULTS_DIR, "validation_history.json")
         validation_history = []
@@ -325,8 +345,8 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
         with open(history_file, 'w') as f:
             json.dump(validation_history, f, indent=2)
     
-    def update_persistent_misclassifications(all_rule_evaluations, iteration):
-        """Track persistently misclassified applications"""
+    def update_persistent_misclassifications(evaluations, iteration):
+        """Track persistently misclassified applications."""
         file_path = os.path.join(RESULTS_DIR, "persistent_misclassifications.json")
         persistent = {}
         
@@ -337,7 +357,7 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
             except Exception:
                 pass
         
-        for eval in all_rule_evaluations:
+        for eval in evaluations:
             app_id = str(eval.get("application_id"))
             is_correct = eval.get("correct", False)
             
@@ -356,11 +376,11 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
         with open(file_path, 'w') as f:
             json.dump(persistent, f, indent=2)
     
-    def identify_edge_cases(all_rule_evaluations, ruleset):
-        """Identify applications that are edge cases"""
+    def identify_edge_cases(evaluations, ruleset):
+        """Identify applications that are edge cases."""
         edge_cases = []
         
-        for eval in all_rule_evaluations:
+        for eval in evaluations:
             rule_evals = eval.get("rule_evaluations", [])
             app_id = eval.get("application_id")
             
@@ -389,7 +409,7 @@ def create_validator(llm_client: OpenAIClient) -> ExpertAgent:
         return edge_cases
     
     def get_previous_accuracy():
-        """Get the accuracy from previous iteration"""
+        """Get the accuracy from previous iteration."""
         history_file = os.path.join(RESULTS_DIR, "validation_history.json")
         if os.path.exists(history_file):
             try:
