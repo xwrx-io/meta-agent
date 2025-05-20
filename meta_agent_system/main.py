@@ -20,6 +20,7 @@ from meta_agent_system.core.summary_generator import generate_summary
 import re
 import textwrap
 from colorama import Fore, Back, Style, init
+from meta_agent_system.core.expert_manager import ExpertManager
 
 # Initialize colorama
 init()
@@ -28,66 +29,22 @@ init()
 logger = get_logger(__name__)
 
 def get_initial_ruleset_from_scratch(openai_client):
-    """Generate an initial ruleset from scratch using the LLM"""
-    print("Generating initial ruleset from scratch using LLM...")
+    """Generate a minimal ruleset from scratch with minimal accuracy"""
+    print("Generating minimal ruleset from scratch...")
     
-    # Create a prompt asking the LLM to generate an initial ruleset
-    prompt = """
-    You are a Credit Card Approval Expert. Create an initial ruleset for credit card approvals.
-    
-    The ruleset should be based on these potential factors:
-    - creditHistory.creditTier (Very Poor, Poor, Good, Very Good, Excellent)
-    - financialInformation.incomeTier (Low, Medium, High, Very High)
-    - financialInformation.debtTier (Very Low, Low, Medium, High)
-    
-    Please provide a simple ruleset in JSON format with the following structure:
-    {
-      "logic": "any",  // Use "any" or "all" 
-      "rules": [
-        // 2-4 simple rules
-      ],
-      "description": "A brief explanation of the ruleset"
-    }
-    
-    Make the rules simple but reasonable for a starting point.
-    """
-    
-    # Generate the ruleset
-    response = openai_client.generate(
-        prompt=prompt,
-        system_message="You are a Credit Card Approval Expert that helps design approval rules.",
-        temperature=0.3,
-        expert_name="Initial Rule Generator"
-    )
-    
-    # Extract JSON from the response
-    try:
-        # Find JSON in response (simple approach)
-        json_start = response.find('{')
-        json_end = response.rfind('}') + 1
-        if json_start >= 0 and json_end > json_start:
-            json_str = response[json_start:json_end]
-            initial_ruleset = json.loads(json_str)
-            
-            # Add timestamp and iteration
-            initial_ruleset["timestamp"] = int(time.time())
-            initial_ruleset["iteration"] = 0
-            
-            return initial_ruleset
-    except Exception as e:
-        logger.error(f"Error parsing LLM response: {str(e)}")
-    
-    # Fallback to a minimal ruleset
+    # Use "any" logic with a non-existent field
+    # This should result in all applications being declined (since the rule will fail)
+    # If most applications should be approved, this will start with low accuracy
     return {
-        "logic": "any",
+        "logic": "any",  # Changed from "all" to "any"
         "rules": [
             {
-                "field": "creditHistory.creditTier",
+                "field": "customerInfo.nonExistentField",
                 "condition": "equals",
-                "threshold": "Excellent"
+                "threshold": "SomeValue"
             }
         ],
-        "description": "Fallback minimal ruleset",
+        "description": "Initial minimal ruleset with no prior knowledge",
         "timestamp": int(time.time()),
         "iteration": 0
     }
@@ -146,7 +103,10 @@ def main():
     validator = create_validator(openai_client)
     rule_analyzer = create_rule_analyzer(openai_client)
     rule_refiner = create_rule_refiner(openai_client)
-    expertise_recommender = create_expertise_recommender(openai_client)  # Create expertise recommender
+    expertise_recommender = create_expertise_recommender(openai_client)
+    
+    # Create expert manager for dynamic experts
+    expert_manager = ExpertManager(openai_client)
     
     # Ensure results directory exists
     os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -362,10 +322,13 @@ def main():
                 print(f"\n{Fore.CYAN}{'-' * 80}{Style.RESET_ALL}")
                 print(f"\n{Fore.GREEN}Detailed expertise recommendations saved to:{Style.RESET_ALL} {Fore.WHITE}{recommendations_file}{Style.RESET_ALL}")
                 print(f"{Fore.CYAN}{'=' * 80}{Style.RESET_ALL}")
-            else:
-                print(f"Failed to generate expertise recommendations: {expertise_result.get('message', 'Unknown error')}")
-            
-            print("\nContinuing with rule discovery process...\n")
+                
+                # Create dynamic experts based on recommendations
+                print(f"\n{Fore.CYAN}Creating specialized experts based on recommendations...{Style.RESET_ALL}")
+                dynamic_experts = expert_manager.create_experts_from_recommendations(recommendations)
+                print(f"{Fore.GREEN}Created {len(dynamic_experts)} specialized experts to assist with rule discovery{Style.RESET_ALL}")
+                
+                print("\nContinuing with rule discovery process...\n")
         
         # If we've reached 100% accuracy, break the loop
         if current_accuracy == 100:
@@ -379,11 +342,33 @@ def main():
             "data": {"iteration": iteration}
         })
         
-        # Step 3: Refine rules
+        # Step 2.5: Gather expert insights
+        expert_insights = []
+        if iteration > 1:  # Only use dynamic experts after they've been created
+            print("Gathering specialized insights from domain experts...")
+            current_ruleset = {}
+            with open(ruleset_file, 'r') as f:
+                current_ruleset = json.load(f)
+            
+            expert_insights = expert_manager.gather_expert_insights(
+                iteration=iteration,
+                current_ruleset=current_ruleset,
+                validation_result=validation_result
+            )
+            
+            if expert_insights:
+                print(f"{Fore.GREEN}Received insights from {len(expert_insights)} specialized experts{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.YELLOW}No expert insights available for this iteration{Style.RESET_ALL}")
+        
+        # Step 3: Refine rules with expert insights
         print("Refining ruleset...")
         refinement_result = rule_refiner.execute({
             "description": "Refine credit card approval rules",
-            "data": {"iteration": iteration}
+            "data": {
+                "iteration": iteration,
+                "expert_insights": expert_insights
+            }
         })
         
         # Report on new ruleset
@@ -393,7 +378,24 @@ def main():
         
         print(f"Rules refined. New ruleset has {len(ruleset.get('rules', []))} rules " +
               f"with '{ruleset.get('logic', 'all')}' logic and {nested_rule_count} nested rule groups.")
-    
+        
+        # After updating best_accuracy, record expert contributions:
+        if current_accuracy > best_accuracy:
+            # Existing code to update best_accuracy, best_iteration, etc.
+            
+            # Record expert contributions if any
+            if expert_insights:
+                expert_manager.record_expert_contribution(
+                    iteration=iteration,
+                    current_accuracy=current_accuracy,
+                    previous_accuracy=best_accuracy,  # Previous best
+                    expert_insights=expert_insights
+                )
+            
+            best_accuracy = current_accuracy
+            best_iteration = iteration
+            # Rest of existing code
+        
     # Summarize results
     print("\n=== Rule Discovery Complete ===")
     print(f"Iterations completed: {iteration}")
@@ -421,9 +423,15 @@ def main():
         best_iteration, 
         current_accuracy, 
         iteration, 
-        final_ruleset
+        final_ruleset,
+        expert_manager  # Pass the expert manager
     )
     print(f"\nDetailed summary report saved to: {summary_file}")
+    
+    # At the end of the program, after generating the summary report:
+    if expert_manager.dynamic_experts:
+        print("\n")
+        print(expert_manager.get_experts_summary())
     
     print("\nRule discovery process complete!")
 

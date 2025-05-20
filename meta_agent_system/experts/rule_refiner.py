@@ -36,19 +36,23 @@ Look for SIMPLE, CLEAR PATTERNS in the data!
         """Optimize rules based on clear examples and diagnostic feedback."""
         iteration = task.get("data", {}).get("iteration", 0)
         
+        # Check for expert insights
+        expert_insights = task.get("data", {}).get("expert_insights", [])
+        
         # Load data
         data = load_required_data()
         
         # Process data to find examples
         examples = categorize_applications(data)
         
-        # Create prompt with examples
+        # Create prompt with examples and any expert insights
         prompt = create_teaching_prompt(
             data["ruleset"], 
             examples["approved"], 
             examples["declined"], 
             examples["misclassified"], 
-            iteration
+            iteration,
+            expert_insights
         )
         
         # Get LLM response
@@ -65,6 +69,10 @@ Look for SIMPLE, CLEAR PATTERNS in the data!
         try:
             # Extract JSON from response
             improved_ruleset = extract_ruleset(llm_response, iteration)
+            
+            # If we used expert insights, note this in the ruleset description
+            if expert_insights and "description" in improved_ruleset:
+                improved_ruleset["description"] += f" (with input from {len(expert_insights)} specialized experts)"
             
             # Save the ruleset
             save_ruleset_file(improved_ruleset)
@@ -183,8 +191,8 @@ Look for SIMPLE, CLEAR PATTERNS in the data!
             "misclassified": misclassified
         }
     
-    def create_teaching_prompt(current_ruleset, approved, declined, misclassified, iteration):
-        """Create a clear, educational prompt with examples."""
+    def create_teaching_prompt(current_ruleset, approved, declined, misclassified, iteration, expert_insights=None):
+        """Create a clear, educational prompt with examples and expert insights."""
         # Format examples nicely
         approved_examples = format_examples(approved[:3], "APPROVED")
         declined_examples = format_examples(declined[:3], "DECLINED")
@@ -199,6 +207,32 @@ APPLICATION #{app['id']}:
 - Current result: {'APPROVED' if app['current_result'] else 'DECLINED'}
 - SHOULD BE: {'APPROVED' if app['should_approve'] else 'DECLINED'}
 """
+        
+        # Add expert insights section if available
+        insights_text = ""
+        if expert_insights:
+            insights_text = "\n## EXPERT INSIGHTS:\n"
+            for insight in expert_insights:
+                expert_name = insight.get('expert', 'Unknown Expert')
+                insights_text += f"\n### {expert_name} suggests:\n"
+                
+                # Extract analysis
+                analysis = insight.get('insight', {}).get('analysis', '')
+                if analysis:
+                    # Limit analysis to a reasonable length
+                    if len(analysis) > 1000:
+                        analysis = analysis[:997] + "..."
+                    insights_text += f"{analysis}\n"
+                
+                # Extract recommendations
+                recommendations = insight.get('insight', {}).get('recommendations', {})
+                if recommendations:
+                    if isinstance(recommendations, dict) and 'recommendations' in recommendations:
+                        for rec in recommendations['recommendations']:
+                            insights_text += f"- {rec}\n"
+                    elif isinstance(recommendations, list):
+                        for rec in recommendations:
+                            insights_text += f"- {rec}\n"
         
         # Create a teaching prompt that explains patterns
         return f"""
@@ -220,7 +254,7 @@ Your goal is to discover the exact rules determining credit card approvals.
 {declined_examples}
 
 ## MISCLASSIFIED APPLICATIONS (Current rules get these wrong):
-{misclassified_examples}
+{misclassified_examples}{insights_text}
 
 ## YOUR TASK:
 1. Study the examples carefully
@@ -228,6 +262,7 @@ Your goal is to discover the exact rules determining credit card approvals.
 3. Focus especially on the misclassified applications
 4. Create rules based on creditTier, incomeTier, and debtTier where possible
 5. Use a simple logical structure - either ANY of several conditions OR ALL conditions must be met
+{"6. Consider the expert insights provided above" if expert_insights else ""}
 
 ## RULE FORMAT:
 Return ONLY a JSON object with this structure:

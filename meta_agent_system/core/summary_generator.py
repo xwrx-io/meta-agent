@@ -13,7 +13,7 @@ init()
 
 logger = get_logger(__name__)
 
-def generate_summary(openai_client, best_accuracy, best_iteration, final_accuracy, iterations_completed, final_ruleset):
+def generate_summary(openai_client, best_accuracy, best_iteration, final_accuracy, iterations_completed, final_ruleset, expert_manager=None):
     """
     Generate a comprehensive summary of the credit card rule discovery process
     
@@ -24,6 +24,7 @@ def generate_summary(openai_client, best_accuracy, best_iteration, final_accurac
         final_accuracy: Final accuracy after all iterations
         iterations_completed: Total number of iterations run
         final_ruleset: The final ruleset used
+        expert_manager: Optional expert manager for dynamic experts contributions
         
     Returns:
         None, but prints summary to console and saves to file
@@ -37,6 +38,11 @@ def generate_summary(openai_client, best_accuracy, best_iteration, final_accurac
     applications_summary = generate_applications_summary(openai_client, final_ruleset)
     improvement_graph = generate_accuracy_visualization()
     
+    # Add expert contributions section if available
+    experts_summary = ""
+    if expert_manager and expert_manager.dynamic_experts:
+        experts_summary = generate_experts_summary(expert_manager)
+    
     # Combine all sections for saving to file (without colors)
     file_summary = f"""
 {'='*80}
@@ -46,6 +52,8 @@ def generate_summary(openai_client, best_accuracy, best_iteration, final_accurac
 {stats_summary}
 
 {ruleset_summary}
+
+{experts_summary}
 
 {applications_summary}
 
@@ -75,6 +83,8 @@ Accuracy Improvement Visualization: {improvement_graph}
     # Print each section with colors already included
     print(stats_summary)
     print(ruleset_summary)
+    if experts_summary:
+        print(experts_summary)
     print(applications_summary)
     
     # Print the visualization info
@@ -684,3 +694,44 @@ def generate_colored_simple_ascii_chart(history_data):
         result.append(f"{Fore.CYAN}Iter {iter_num:2d} |{Style.RESET_ALL} {bar} {Fore.WHITE}{acc:.1f}%{Style.RESET_ALL}")
     
     return "\n".join(result)
+
+def generate_experts_summary(expert_manager):
+    """Generate a summary of dynamic experts contributions"""
+    if not expert_manager or not expert_manager.dynamic_experts:
+        return ""
+    
+    experts = expert_manager.dynamic_experts
+    contributions = expert_manager.expert_contributions
+    
+    result = f"""
+{Fore.GREEN}DYNAMIC EXPERTS CONTRIBUTIONS{Style.RESET_ALL}
+{Fore.CYAN}{'-'*30}{Style.RESET_ALL}
+{Fore.WHITE}Number of Dynamic Experts: {Fore.YELLOW}{len(experts)}{Style.RESET_ALL}
+"""
+    
+    # List experts by name
+    result += f"\n{Fore.WHITE}Specialized Expertise Areas:{Style.RESET_ALL}\n"
+    for expert in experts:
+        result += f"{Fore.CYAN}• {expert.name}{Style.RESET_ALL}\n"
+    
+    # Summarize contributions
+    if contributions:
+        result += f"\n{Fore.WHITE}Key Contributions:{Style.RESET_ALL}\n"
+        
+        # Sort by improvement amount
+        sorted_contribs = sorted(
+            contributions.values(), 
+            key=lambda x: x.get("improvement", 0), 
+            reverse=True
+        )
+        
+        for contrib in sorted_contribs[:3]:  # Show top 3 contributions
+            iter_num = contrib.get("iteration", "?")
+            improvement = contrib.get("improvement", 0)
+            experts = contrib.get("contributing_experts", [])
+            
+            result += f"{Fore.YELLOW}Iteration {iter_num}:{Style.RESET_ALL} "
+            result += f"{Fore.GREEN}+{improvement:.2f}%{Style.RESET_ALL} "
+            result += f"{Fore.WHITE}improvement with insights from {Fore.CYAN}{', '.join(experts)}{Style.RESET_ALL}\n"
+    
+    return result

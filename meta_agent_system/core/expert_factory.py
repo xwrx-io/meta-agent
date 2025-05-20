@@ -139,23 +139,18 @@ The system prompt should be comprehensive, instructive, and set clear expectatio
         
         return generated_prompt
 
-    def create_experts_from_recommendations(self, recommendations_file):
-        """Create expert agents from recommendations in a file."""
-        self.logger.info(f"Creating experts from recommendations file: {recommendations_file}")
-        
-        new_experts = []
-        
-        # Load recommendations from file
-        try:
-            with open(recommendations_file, 'r') as f:
-                recommendations = json.load(f)
-        except Exception as e:
-            self.logger.error(f"Error loading recommendations from {recommendations_file}: {str(e)}")
-            return []
+    def create_experts_from_recommendations(self, recommendations):
+        """Create expert agents from recommendations dictionary."""
+        # Summary at INFO level, but details at DEBUG
+        self.logger.info(f"Creating experts from {len(recommendations.get('recommended_experts', []))} recommendations")
+        self.logger.debug(f"Recommendations details: {recommendations}")
         
         if not recommendations or not isinstance(recommendations, dict) or "recommended_experts" not in recommendations:
-            self.logger.warning(f"Invalid recommendations format: {recommendations}")
+            self.logger.warning(f"Invalid recommendations format")
+            self.logger.debug(f"Invalid recommendations: {recommendations}")
             return []
+        
+        new_experts = []
         
         # Create each recommended expert
         for expert_data in recommendations.get("recommended_experts", []):
@@ -165,7 +160,8 @@ The system prompt should be comprehensive, instructive, and set clear expectatio
                 system_prompt = expert_data.get("system_prompt", "")
                 
                 if not name or not capabilities:
-                    self.logger.warning(f"Missing required fields in expert recommendation: {expert_data}")
+                    self.logger.warning(f"Missing required fields for expert: {name}")
+                    self.logger.debug(f"Incomplete expert data: {expert_data}")
                     continue
                 
                 # Check if we already have an expert with this name
@@ -173,10 +169,11 @@ The system prompt should be comprehensive, instructive, and set clear expectatio
                     self.logger.info(f"Expert {name} already exists, skipping creation")
                     continue
                 
-                # Log the new expert creation with its system prompt
+                # Log the new expert creation - basic info at INFO level
                 self.logger.info(f"Creating new expert: {name}")
-                self.logger.info(f"Capabilities: {capabilities}")
-                self.logger.info(f"System prompt: {system_prompt}")
+                # Details only at DEBUG level
+                self.logger.debug(f"Expert capabilities: {capabilities}")
+                self.logger.debug(f"Expert system prompt: {system_prompt}")
                 
                 # Create a dynamic expert agent
                 new_expert = self.create_dynamic_expert(name, capabilities, system_prompt)
@@ -186,7 +183,7 @@ The system prompt should be comprehensive, instructive, and set clear expectatio
                     self.created_experts[name] = new_expert
                     self.logger.info(f"Successfully created expert: {name}")
             except Exception as e:
-                self.logger.error(f"Error creating expert from recommendation: {str(e)}")
+                self.logger.error(f"Error creating expert {name}: {str(e)}")
         
         self.logger.info(f"Created {len(new_experts)} new expert agents")
         return new_experts
