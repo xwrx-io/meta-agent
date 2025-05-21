@@ -1,31 +1,31 @@
 # Credit Card Approval Rule Discovery System
 
-An AI-driven system that uses Large Language Models (LLMs) to discover and refine optimal credit card approval rules through iterative learning and specialized expert insights.
+An AI-driven system that uses Large Language Models (LLMs) to discover and refine optimal credit card approval rules through iterative learning and specialised expert insights.
 
 ## Overview
 
-This system demonstrates how LLMs can learn domain-specific rules by analyzing patterns in data and leveraging specialized expertise. It discovers credit card approval rules through an iterative process, incorporating feedback from multiple specialized agents until achieving high accuracy.
+This system demonstrates how LLMs can learn domain-specific rules by analysing patterns in data and leveraging specialised expertise. It discovers credit card approval rules through an iterative process, incorporating feedback from multiple specialised agents until achieving high accuracy.
 
 ## Features
 
 - **Autonomous Rule Discovery** - Discovers approval rules from application examples
 - **Iterative Refinement** - Improves rules across multiple cycles until reaching high accuracy
-- **Dynamic Expert Integration** - Generates specialized expert agents that provide domain-specific insights
+- **Dynamic Expert Integration** - Generates specialised expert agents that provide domain-specific insights
 - **Comprehensive Validation** - Tests rules against applications with detailed diagnostics
-- **LLM-Powered Analysis** - Leverages LLMs to analyze patterns and refine rules
-- **Visual Progress Tracking** - Generates charts and visualizations of accuracy improvements
+- **LLM-Powered Analysis** - Leverages LLMs to analyse patterns and refine rules
+- **Visual Progress Tracking** - Generates charts and visualisations of accuracy improvements
 
 ## Components
 
-The system consists of these specialized components:
+The system consists of these specialised components:
 
 1. **Validator** - Tests rules against applications and measures accuracy
-2. **Rule Analyzer** - Examines applications to identify distinguishing patterns
+2. **Rule Analyser** - Examines applications to identify distinguishing patterns
 3. **Rule Refiner** - Creates improved rules based on analysis and validation feedback
 4. **Expertise Recommender** - Identifies needed domain expertise and generates expert configurations
 5. **Expert Manager** - Creates and coordinates dynamic experts based on recommendations
-6. **Dynamic Experts** - Specialized agents focusing on specific aspects (credit history, income stability, etc.)
-7. **Summary Generator** - Creates comprehensive reports with visualizations
+6. **Dynamic Experts** - Specialised agents focusing on specific aspects (credit history, income stability, etc.)
+7. **Summary Generator** - Creates comprehensive reports with visualisations
 
 ## Getting Started
 
@@ -87,7 +87,7 @@ python meta_agent_system/main.py --from-scratch --max-iterations 20
 Results are saved to the `data/results/` directory, including:
 - Final ruleset in `credit_card_approval_rules.json`
 - Validation metrics in `validation_history.json`
-- Accuracy visualization in `accuracy_improvement_[timestamp].png`
+- Accuracy visualisation in `accuracy_improvement_[timestamp].png`
 - Expert recommendations in `expertise_recommendations_[timestamp].json`
 - Expert insights in `expert_insights_iteration_[N].json`
 - Expert contributions in `expert_contributions_iteration_[N].json`
@@ -103,7 +103,7 @@ graph TD
     B --> C[Validate Ruleset]
     C --> G[Generate Expert Recommendations]
     G --> H[Create Dynamic Experts]
-    C --> D[Analyze Patterns]
+    C --> D[Analyse Patterns]
     D --> I[Gather Expert Insights]
     D --> E[Refine Rules]
     I --> E
@@ -114,26 +114,26 @@ graph TD
 1. **Application Generation** - Creates credit applications with various attributes
 2. **Initial Ruleset** - Starts with a minimal ruleset when using `--from-scratch` or default ruleset
 3. **Validation** - Tests rules against applications and measures accuracy
-4. **Expert Recommendation** - After first iteration, recommends specialized expert types
-5. **Dynamic Expert Creation** - Creates specialized agents for different aspects of credit assessment
+4. **Expert Recommendation** - After first iteration, recommends specialised expert types
+5. **Dynamic Expert Creation** - Creates specialised agents for different aspects of credit assessment
 6. **Pattern Analysis** - Examines approved, declined, and misclassified applications
-7. **Expert Insights** - Dynamic experts provide specialized domain-specific recommendations
+7. **Expert Insights** - Dynamic experts provide specialised domain-specific recommendations
 8. **Rule Refinement** - Creates improved rules based on validation feedback, pattern analysis, and expert insights
 9. **Iteration** - Continues until reaching 100% accuracy or maximum iterations
 
 ### Dynamic Experts System
 
-The system creates specialized experts after the first iteration:
+The system creates specialised experts after the first iteration:
 
-1. **Expertise Recommender** analyzes initial results to identify needed expertise
+1. **Expertise Recommender** analyses initial results to identify needed expertise
 2. **Expert Manager** creates and coordinates dynamic experts
-3. **Dynamic Experts** provide specialized insights in their domain:
+3. **Dynamic Experts** provide specialised insights in their domain:
    - Credit History Evaluator
-   - Income Tier Analyzer
+   - Income Tier Analyser
    - Debt-to-Income Ratio Specialist
    - Employment Stability Assessor
    - etc.
-4. These experts analyze applications and provide recommendations that help the Rule Refiner create more accurate rules
+4. These experts analyse applications and provide recommendations that help the Rule Refiner create more accurate rules
 
 ### Rule Structure
 
@@ -177,32 +177,32 @@ Rules follow a nested logical structure:
     - `summary_generator.py`: Generates comprehensive reports
   - `experts/`: Expert modules
     - `validator.py`: Validates ruleset against applications
-    - `rule_analyzer.py`: Analyzes patterns in applications
+    - `rule_analyzer.py`: Analyses patterns in applications
     - `rule_refiner.py`: Refines rules based on feedback
     - `expertise_recommender.py`: Recommends needed expertise
-    - `misclassification_analyzer.py`: Analyzes edge cases
+    - `misclassification_analyzer.py`: Analyses edge cases
   - `llm/`: LLM integration components
   - `utils/`: Helper utilities
 - `data/`: Data storage
   - `applications/`: Generated credit card applications
-  - `results/`: Output files and visualizations
+  - `results/`: Output files and visualisations
 - `data_generation.py`: Creates sample credit card applications
 
 ## Key Insights and Learnings
 
 ### Effective LLM Teaching Techniques
 - **Example-Based Learning**: LLMs learn better from concrete examples than abstract descriptions
-- **Specialized Expertise**: Domain-specific experts provide focused insights in their area
+- **Specialised Expertise**: Domain-specific experts provide focused insights in their area
 - **Multi-agent Collaboration**: Different experts working together achieve better results than generalists
 - **Explicit Feedback**: Showing both correct classifications and mistakes with explanations
 
 ### System Architecture Principles
 - **Focused Prompts**: Clear, specific instructions perform better than open-ended ones
-- **Dynamic Expertise**: System adapts by creating specialized agents as needed
+- **Dynamic Expertise**: System adapts by creating specialised agents as needed
 - **Feedback Integration**: Multiple sources of feedback (validation, experts) are combined
 - **Agentic Workflow**: Independent experts focus on their specialties and collaborate
 
-## Customization
+## Customisation
 
 ### Modifying Application Generation
 
@@ -217,9 +217,9 @@ To change how applications are generated:
 You can extend this approach to other domains by:
 1. Creating domain-specific data generators
 2. Adjusting the rule format to match domain requirements
-3. Customizing validation criteria and expert recommendations
-4. Adding new types of specialized experts
+3. Customising validation criteria and expert recommendations
+4. Adding new types of specialised experts
 
-## License
+## Licence
 
-[MIT License](LICENSE)
+[MIT Licence](LICENSE)
